@@ -7,7 +7,7 @@ import pandas as pd
 
 def clean_filename(file_name: str, not_allowed: str = " %:/,.\\[]<>*?") -> str:
     """Replace with spaces chars unsafe for file name."""
-    return "".join([" " if ch in not_allowed else ch for ch in file_name])
+    return "".join([" " if ch in not_allowed else ch for ch in file_name]).strip()
 
 
 def load_reviews(goodreads_export_csv_name: str) -> pd.DataFrame:
@@ -15,14 +15,17 @@ def load_reviews(goodreads_export_csv_name: str) -> pd.DataFrame:
     return pd.read_csv(goodreads_export_csv_name)
 
 
-def dump_md(books_df: pd.DataFrame, folder: str) -> None:
+def dump_md(books_df: pd.DataFrame, folder: str) -> None:  # pylint: disable=too-many-locals
     """Save books and authors as md-files."""
     for _, book in books_df.iterrows():
         title = book["Title"]
         author = book["Author"]
         id_ = book["Book Id"]
         rating = book["My Rating"]
-        stars = ("@" * rating).ljust(6, " ")
+        if rating == 0:
+            stars = ""
+        else:
+            stars = ("@" * rating).ljust(6, " ")
         review = book["My Review"]
         if isinstance(review, str):
             review = markdownify.markdownify(book["My Review"])
@@ -34,21 +37,28 @@ def dump_md(books_df: pd.DataFrame, folder: str) -> None:
             tags = []
         else:
             tags = [f"#book/{shelf.strip()}" for shelf in book["Bookshelves"].split(",")]
+        tags.append("#book/book")
+        if rating > 0:
+            tags.append(f"#book/rating{rating}")
         with open(
-            os.path.join(folder, f"{clean_filename(author)}.md"), "w", encoding="utf8"
+            os.path.join(folder, "authors", f"{clean_filename(author)}.md"), "w", encoding="utf8"
         ) as md_file:
-            md_file.write(author)
-        with open(os.path.join(folder, file_name), "w", encoding="utf8") as md_file:
-            md_file.write(
-                f"""
-[[{clean_filename(author)}]] [{title}]({book_url})
+            author_article = f"{author}\n\n#book/author"
+            md_file.write(author_article)
+        if review == "" and rating == 0:
+            subfolder = "toread"
+        else:
+            subfolder = "reviews"
+        with open(os.path.join(folder, subfolder, file_name), "w", encoding="utf8") as md_file:
+            book_article = f"""
+[[{clean_filename(author)}]]: [{title}]({book_url})
 ISBN{book["ISBN"]} (ISBN13{book["ISBN13"]})
 
 {review}
 
 {" ".join(tags)}
 """
-            )
+            md_file.write(book_article)
 
 
 if __name__ == "__main__":
@@ -57,6 +67,6 @@ if __name__ == "__main__":
         books,
         (
             "/Users/sorokan6/Library/CloudStorage/OneDrive-EPAM/"
-            "Documents/Obsidian/anso-mobile/anso/books/goodreads"
+            "Documents/Obsidian/anso-mobile/anso/books/"
         ),
     )
