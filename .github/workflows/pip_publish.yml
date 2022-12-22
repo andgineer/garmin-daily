@@ -1,5 +1,5 @@
 # This workflows will upload a Python Package using Twine when a version tag is pushed
-# To publish new version use `verup.sh`
+# To publish new version use `scripts/verup.sh`
 # Put you pypi credentials (PYPI_USERNAME, PYPI_PASSWORD) into the github repository secrets
 # For more information see: https://help.github.com/en/actions/language-and-framework-guides/using-python-with-github-actions#publishing-to-package-registries
 

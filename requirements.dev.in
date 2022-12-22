@@ -10,3 +10,4 @@ mkdocs-awesome-pages-plugin
 twine
 pre-commit
 pip-tools
+black

@@ -4,7 +4,7 @@
 #
 
 VENV_FOLDER="venv"
-PYTHON="python3.8"
+PYTHON="python3.11"
 
 RED='\033[1;31m'
 GREEN='\033[1;32m'

@@ -23,5 +23,5 @@ jobs:
       - run: |
           pip install -r requirements.dev.txt
           python -m pip install -e .
-      - run: ./build-docs.sh
+      - run: scripts/build-docs.sh
       - run: mkdocs gh-deploy --force
