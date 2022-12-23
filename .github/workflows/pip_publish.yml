@@ -8,7 +8,7 @@ name: Publish Python PIP Package on pypi and create github release
 on:
   push:
     tags:
-      - 'v*.*.*'
+      - '*.*.*'
 
 jobs:
   publish:
