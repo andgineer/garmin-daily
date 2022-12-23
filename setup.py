@@ -16,7 +16,15 @@ setuptools.setup(
     version=version.VERSION,
     author="Andrey Sorokin",
     author_email="andrey@sorokin.engineer",
-    description="Aggregate data from Garmin Connect dayly",
+    description=(
+        "Aggregate data from Garmin Connect dayly. "
+        "Also contains script to convert goodreads books to markdown files, for example for Obsidian."
+    ),
+    entry_points={
+        "console_scripts": [
+            "goodreads_csv_to_markdown=goodreads.goodreads_csv_to_markdown:main",
+        ],
+    },
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://andgineer.github.io/garmin-dayly/",

@@ -3,3 +3,4 @@ pandas
 requests
 gspread
 markdownify
+click
