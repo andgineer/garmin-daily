@@ -33,7 +33,7 @@ setuptools.setup(
     install_requires=requirements,
     tests_require=tests_requirements,
     python_requires=">=3.7",
-    keywords="Garmin Connect Health",
+    keywords="Garmin Connect Health goodreads book markdown",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
