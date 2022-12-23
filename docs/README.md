@@ -11,14 +11,38 @@ Honestly this is just repo for my home small automation.
 If you want to import your book reviews for example to Obsidian, all you need it to convert goodreads export CSV
 to markdown files.
 
-I included simple script for that to this package.
+How to create goodreads export see in https://www.goodreads.com/review/import
+
+In 2022 they declare it to be removed by August, but at least at the end of 2022 it still works.
+
+I included simple script into this package to convert goodreads CSV to markdown.
 
 Just install the package
 
     pip install garmin-dayly
 
-And it will also install script `goodreads_csv_to_markdown`.
-Call it as `goodreads_csv_to_markdown --help` to get help.
+It will install script `goodreads_csv_to_markdown`.
+
+    $> goodreads_csv_to_markdown --help
+
+    Usage: goodreads_csv_to_markdown [OPTIONS] [CSV_FILE] [MARKDOWN_FOLDER]
+
+      Convert reviews and authors from goodreads export CSV file to markdown
+      files.
+
+      For example you can create nice structure in Obsidian.
+
+      How to create goodreads export see in
+      https://www.goodreads.com/review/import In 2022 they declare it to be
+      removed by August, but at least at the end of 2022 it still works.
+
+      csv_file: Goodreads export file
+
+      markdown_folder: Folder where we create markdown files exported from
+      goodreads CSV
+
+    Options:
+      --help  Show this message and exit.
 
 ## Fill Google Sheet from Garmin Connect
 
