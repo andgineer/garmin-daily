@@ -5,7 +5,7 @@ import markdownify
 import pandas as pd
 
 
-def clean_filename(file_name: str, not_allowed: str = " %:/,.\\[]<>*?") -> str:
+def clean_filename(file_name: str, not_allowed: str = ' %:/,.\\[]<>*?"|#') -> str:
     """Replace with spaces chars unsafe for file name."""
     return "".join([" " if ch in not_allowed else ch for ch in file_name]).strip()
 
