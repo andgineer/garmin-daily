@@ -5,7 +5,7 @@
 #   verup.sh release / feature / branch / ss
 # (ss - to create snapshot version)
 
-VERSION_FILES=("src/garmin_dayly/version.py")
+VERSION_FILES=("src/garmin_daily/version.py")
 
 set -u
 set -e
