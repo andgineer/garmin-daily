@@ -1,3 +1,7 @@
+import codecs
+import os
+import os.path
+
 import setuptools
 
 with open("README.md", "r") as fh:
@@ -9,11 +13,27 @@ with open("requirements.txt") as f:
 with open("requirements.dev.txt") as f:
     tests_requirements = f.read().splitlines()
 
-from src.garmin_daily import version
+
+# Solution from https://packaging.python.org/guides/single-sourcing-package-version/
+def read(rel_path: str) -> str:
+    """Read file."""
+    here = os.path.abspath(os.path.dirname(__file__))
+    with codecs.open(os.path.join(here, rel_path), "r") as fp:
+        return fp.read()
+
+
+def get_version(rel_path: str) -> str:
+    """Parse version from file content."""
+    for line in read(rel_path).splitlines():
+        if line.startswith("VERSION"):
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    raise RuntimeError("Unable to find version string.")
+
 
 setuptools.setup(
     name="garmin-daily",
-    version=version.VERSION,
+    version=get_version("src/garmin_daily/version.py"),
     author="Andrey Sorokin",
     author_email="andrey@sorokin.engineer",
     description=(
