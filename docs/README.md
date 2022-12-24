@@ -16,7 +16,7 @@ In 2022 they declared it to be removed by August, but at least at the end of 202
 
 Install the package
 
-    pip install garmin-dayly
+    pip install garmin-daily
 
 It will install Linux or Windows script `goodreads-export`.
 
@@ -62,4 +62,4 @@ Documentation generated from source code.
 
 # source code
 
-[sorokin.engineer/aios3](https://github.com/andgineer/garmin-dayly)
+[sorokin.engineer/aios3](https://github.com/andgineer/garmin-daily)

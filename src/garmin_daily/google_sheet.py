@@ -31,6 +31,11 @@ print(days_to_fill)
 #     steps = sum(steps["steps"] for steps in steps_data)
 #     print(date, steps)
 
+# 27.01.22 - ski
+# 9.03.22 - ellipse
+# 10.04.22 run
+# 14.10.21 roller ski
+
 for day_idx in range(1):
     start_date = last_date + timedelta(days=day_idx)
     stop_date = start_date  # + timedelta(days=1)

@@ -1,9 +1,9 @@
-[![Build Status](https://github.com/andgineer/garmin-dayly/workflows/ci/badge.svg)](https://github.com/andgineer/garmin-dayly/actions)
+[![Build Status](https://github.com/andgineer/garmin-daily/workflows/ci/badge.svg)](https://github.com/andgineer/garmin-daily/actions)
 # Fill Google Sheets with data from Garmin Connect
 
 # Documentation
 
-[garmin-dayly](https://andgineer.github.io/garmin-dayly/)
+[garmin-daily](https://andgineer.github.io/garmin-daily/)
 
 # Developers
 

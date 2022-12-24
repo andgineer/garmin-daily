@@ -9,15 +9,15 @@ with open("requirements.txt") as f:
 with open("requirements.dev.txt") as f:
     tests_requirements = f.read().splitlines()
 
-from src.garmin_dayly import version
+from src.garmin_daily import version
 
 setuptools.setup(
-    name="garmin-dayly",
+    name="garmin-daily",
     version=version.VERSION,
     author="Andrey Sorokin",
     author_email="andrey@sorokin.engineer",
     description=(
-        "Aggregate data from Garmin Connect dayly. "
+        "Aggregate data from Garmin Connect daily. "
         "Also contains script to convert goodreads books to markdown files, for example for Obsidian."
     ),
     entry_points={
@@ -27,7 +27,7 @@ setuptools.setup(
     },
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://andgineer.github.io/garmin-dayly/",
+    url="https://andgineer.github.io/garmin-daily/",
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     install_requires=requirements,
