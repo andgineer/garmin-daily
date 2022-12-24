@@ -22,7 +22,7 @@ setuptools.setup(
     ),
     entry_points={
         "console_scripts": [
-            "goodreads_csv_to_markdown=goodreads.goodreads_csv_to_markdown:main",
+            "goodreads-export=goodreads.goodreads_csv_to_markdown:main",
         ],
     },
     long_description=long_description,

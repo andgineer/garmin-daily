@@ -91,13 +91,16 @@ ISBN{book.isbn} (ISBN13{book.isbn13})
     type=click.File("r"),
     nargs=1,
 )
-@click.argument(
-    "markdown_folder",
-    default="obsidian/books",
+@click.option(
+    "--out",
+    "-o",
+    "output_folder",
+    default=".",
     type=click.Path(exists=True, path_type=Path),
+    help="Folder where we put result. By default current folder.",
     nargs=1,
 )
-def main(csv_file: TextIO, markdown_folder: Path) -> None:
+def main(csv_file: TextIO, output_folder: Path) -> None:
     """Convert reviews and authors from goodreads export CSV file to markdown files.
 
     For example you can create nice structure in Obsidian.
@@ -106,12 +109,11 @@ def main(csv_file: TextIO, markdown_folder: Path) -> None:
     In 2022 they declare it to be removed by August,
     but at least at the end of 2022 it still works.
 
-    csv_file: Goodreads export file
+    CSV_FILE: Goodreads export file. By default `goodreads_library_export.csv`.
 
-    markdown_folder: Folder where we create markdown files exported from goodreads CSV
     """
     books = load_reviews(csv_file)
-    dump_md(books, markdown_folder)
+    dump_md(books, output_folder)
 
 
 if __name__ == "__main__":
