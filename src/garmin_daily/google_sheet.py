@@ -1,6 +1,7 @@
 """Export Garmin data to Google Sheet."""
 import os
-from datetime import datetime, timedelta
+from datetime import date, datetime
+from pprint import pprint
 
 import gspread
 from garminconnect import Garmin
@@ -31,13 +32,15 @@ print(days_to_fill)
 #     steps = sum(steps["steps"] for steps in steps_data)
 #     print(date, steps)
 
-# 27.01.22 - ski
-# 9.03.22 - ellipse
-# 10.04.22 run
-# 14.10.21 roller ski
+# 27.01.22 - ski 'locationName': 'Всеволожский район',
+# 9.03.22 - ellipse  'locationName': None,
+# 10.04.23 run 'locationName': 'Novi Sad',
+# 14.10.21 roller ski,  'locationName': 'Петербург',
+# The classic bulevar Oslodođenja
+# Самоизоляция
 
-for day_idx in range(1):
-    start_date = last_date + timedelta(days=day_idx)
+for start_date in [date(2022, 1, 27), date(2022, 3, 9), date(2022, 4, 23), date(2021, 10, 14)]:
+    # start_date = last_date + timedelta(days=day_idx)
     stop_date = start_date  # + timedelta(days=1)
 
     activities = api.get_activities_by_date(start_date.isoformat(), stop_date.isoformat(), "")
@@ -45,9 +48,10 @@ for day_idx in range(1):
     # Download activities
     for activity in activities:
         activity_id = activity["activityId"]
-        # pprint(activity)
+        pprint(activity)
         print(
-            activity["activityType"]["typeKey"],
+            start_date,
+            f"{activity['activityType']['typeKey'] = }",
             activity["averageHR"],
             activity["calories"],
             activity["distance"],
@@ -56,7 +60,7 @@ for day_idx in range(1):
             activity["elevationGain"],
             activity["locationName"],
             activity["maxHR"],
-            60 / activity["maxSpeed"],
+            activity["maxSpeed"],
             "km/h??",
             activity["startTimeLocal"],
             activity["steps"],

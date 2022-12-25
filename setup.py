@@ -36,15 +36,12 @@ setuptools.setup(
     version=get_version("src/garmin_daily/version.py"),
     author="Andrey Sorokin",
     author_email="andrey@sorokin.engineer",
-    description=(
-        "Aggregate data from Garmin Connect daily. "
-        "Also contains script to convert goodreads books to markdown files, for example for Obsidian."
-    ),
-    entry_points={
-        "console_scripts": [
-            "goodreads-export=goodreads.goodreads_csv_to_markdown:main",
-        ],
-    },
+    description=("Aggregate data from Garmin Connect daily."),
+    # entry_points={
+    #     "console_scripts": [
+    #         "goodreads-export=goodreads.goodreads_csv_to_markdown:main",
+    #     ],
+    # },
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://andgineer.github.io/garmin-daily/",
@@ -53,7 +50,7 @@ setuptools.setup(
     install_requires=requirements,
     tests_require=tests_requirements,
     python_requires=">=3.7",
-    keywords="Garmin Connect Health goodreads book markdown",
+    keywords="Garmin Connect Health Google Sheets",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",

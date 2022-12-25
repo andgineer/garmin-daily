@@ -6,7 +6,7 @@
 lazydocs \
     --output-path="./docs/docstrings" \
     --overview-file="README.md" \
-    --src-base-url="https://github.com/andgineer/garmin-dayly/blob/master/" \
-    src/garmin_dayly src/goodreads
+    --src-base-url="https://github.com/andgineer/garmin-daily/blob/master/" \
+    src/garmin_daily
 
 mkdocs build
