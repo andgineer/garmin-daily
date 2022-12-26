@@ -4,6 +4,7 @@ from datetime import date
 from typing import Any, Dict, List
 
 from garminconnect import Garmin, GarminConnectConnectionError
+from requests.adapters import HTTPAdapter, Retry
 
 MAX_LOGIN_RETRY = 5
 
@@ -22,6 +23,7 @@ KM_IN_MINUTE = 0.14
 SPORT_DETECTION: Dict[str, Any] = {
     "running": "Running",
     "elliptical": "Ellipse",
+    "cycling": "Bicycle",
     "skate_skiing_ws": [
         {"Skiing": {}},
         {"Roller skiing": {}},  # locationName=Петербург, startTimeLocal>=2021-4-17, <=2021.11.16
@@ -119,20 +121,17 @@ class GarminDaily:  # pylint: disable=too-few-public-methods
         email = os.getenv("GARMIN_EMAIL")
         password = os.getenv("GARMIN_PASSWORD")
         self.api = Garmin(email, password)
+        self.api.session.verify = False
+        retries = Retry(
+            total=5,
+            backoff_factor=3,  # retry in [0, 6, 12, 24, 48] seconds
+            status_forcelist=[403],
+        )
+        self.api.session.mount("https://", HTTPAdapter(max_retries=retries))
 
     def login(self):
         """Login."""
-        retry_num = MAX_LOGIN_RETRY
-        while retry_num > 0:
-            try:
-                self.api.login()
-            except GarminConnectConnectionError as exception:
-                if "Forbidden url: https://sso.garmin.com/sso/signin" in str(exception):
-                    # Garmin Connect login often fail this way
-                    retry_num -= 1
-                    print("Login retry")
-                else:
-                    raise
+        self.api.login()
 
     def __getitem__(self, day: date) -> GarminDay:
         """Get aggregated day."""
