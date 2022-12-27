@@ -69,6 +69,7 @@ repos:
         exclude: (tests)
         language: python
         require_serial: true
+        additional_dependencies: ['types-requests']
         args: ["run", "--", "--strict", "--implicit-reexport", "--warn-unused-ignores", "--cache-fine-grained", "--no-namespace-packages"]
 
       - id: pylint
