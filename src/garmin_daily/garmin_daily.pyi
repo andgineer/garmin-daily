@@ -13,5 +13,3 @@ class Activity:
     maxSpeed: float
     startTimeLocal: str
     steps: int
-
-

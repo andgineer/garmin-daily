@@ -1,9 +1,9 @@
 """Garmin data aggregated daily."""
 import os
-from datetime import date, datetime
-from typing import Any, Dict, List
+from datetime import date
+from typing import Any, Dict, List, Tuple
 
-from garminconnect import Garmin, GarminConnectConnectionError
+from garminconnect import Garmin
 from requests.adapters import HTTPAdapter, Retry
 
 MAX_LOGIN_RETRY = 5
@@ -13,7 +13,7 @@ ACTIVITY_STEPS_CORRECTIONS = {
     # also we calculate "wrong" steps that were false detected in activities like roller skiing
     # - we have to decrease the day activity by this steps number because
     # this is not real "steps" you walk
-    "skate_skiing_ws": 0.0015,  # I calculated it for roller skiing but I believe it's the same for skiing
+    "skate_skiing_ws": 0.0015,  # I calculated it for roller skiing hope it's the same for skiing
     "running": 0.00089,
 }
 
@@ -47,10 +47,24 @@ ACTIVITY_FIELDS = [
 ]
 
 
-class Activity:
+class Activity:  # pylint: disable=too-few-public-methods
     """Garmin activity."""
 
-    def __init__(self, **activity_dict: Dict[str, Any]):
+    activityType: str
+    averageHR: float
+    calories: float
+    distance: float
+    duration: float
+    elevationGain: float
+    locationName: str
+    maxHR: float
+    maxSpeed: float
+    startTimeLocal: str
+    steps: int
+    correction_steps: int
+    sport: str
+
+    def __init__(self, **activity_dict: Any):
         """Init."""
         for field_path in ACTIVITY_FIELDS:
             if ACTIVITY_PATH_DELIMITER in field_path:
@@ -81,9 +95,11 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         self.total_steps = self.get_steps()
         self.activities = self.aggregate_activities()
 
-    def detect_sport(self, activity: Activity) -> (str, bool):
+    def detect_sport(self, activity: Activity) -> Tuple[str, bool]:  # pylint: disable=no-self-use
         """Detect sport.
-        Return (sport, separate)"""
+
+        Return (sport, separate)
+        """
         if activity.activityType in SPORT_DETECTION:  # pylint: disable=no-member
             separate = activity.distance > 8000 and activity.activityType == "cycling"
             return SPORT_DETECTION[activity.activityType], separate  # pylint: disable=no-member
@@ -96,12 +112,12 @@ class GarminDay:  # pylint: disable=too-few-public-methods
 
     def get_activities(self) -> List[Dict[str, Any]]:
         """Get activities."""
-        return self.api.get_activities_by_date(self.date_str, self.date_str, "")
+        return self.api.get_activities_by_date(self.date_str, self.date_str, "")  # type: ignore
 
     def aggregate_activities(self) -> Dict[str, Any]:
         """Aggregate."""
         activities_raw = self.get_activities()
-        activities = {}
+        activities: Dict[str, Any] = {}
         for activity_dict in activities_raw:
             activity = Activity(**activity_dict)
             sport, separate = self.detect_sport(activity)
@@ -110,34 +126,35 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             if sport not in activities:
                 activities[sport] = []
             activities[sport].append(activity)  # pylint: disable=no-member
-        for activity in activities:
-            activities[activity] = Activity(
-                activityType=activities[activity][0].activityType,
-                averageHR=sum(activity.averageHR for activity in activities[activity]) / len(activities[activity]),
-                calories=sum(activity.calories for activity in activities[activity]),
-                distance=sum(activity.distance for activity in activities[activity]),
-                duration=sum(activity.duration for activity in activities[activity]),
-                elevationGain=sum(activity.elevationGain for activity in activities[activity]),
-                locationName=activities[activity][0].locationName,
-                maxHR=max(activity.maxHR for activity in activities[activity]),
-                maxSpeed=max(activity.maxSpeed for activity in activities[activity]),
-                startTimeLocal=min(activity.startTimeLocal for activity in activities[activity]),
-                steps=sum(0 if activity.steps is None else activity.steps for activity in activities[activity]),
+        for activity_idx in activities:
+            activities[activity_idx] = Activity(
+                activityType=activities[activity_idx][0].activityType,
+                averageHR=sum(a.averageHR for a in activities[activity_idx])
+                / len(activities[activity_idx]),
+                calories=sum(a.calories for a in activities[activity_idx]),
+                distance=sum(a.distance for a in activities[activity_idx]),
+                duration=sum(a.duration for a in activities[activity_idx]),
+                elevationGain=sum(a.elevationGain for a in activities[activity_idx]),
+                locationName=activities[activity_idx][0].locationName,
+                maxHR=max(a.maxHR for a in activities[activity_idx]),
+                maxSpeed=max(a.maxSpeed for a in activities[activity_idx]),
+                startTimeLocal=min(a.startTimeLocal for a in activities[activity_idx]),
+                steps=sum(0 if a.steps is None else a.steps for a in activities[activity_idx]),
             )
-            if activities[activity] in ACTIVITY_STEPS_CORRECTIONS:
-                activities[activity].correction_steps = (
-                        activities[activity].distance  # pylint: disable=no-member
-                        // ACTIVITY_STEPS_CORRECTIONS[activities[activity].sport]
+            if activities[activity_idx] in ACTIVITY_STEPS_CORRECTIONS:
+                activities[activity_idx].correction_steps = int(
+                    activities[activity_idx].distance  # pylint: disable=no-member
+                    // ACTIVITY_STEPS_CORRECTIONS[activities[activity_idx].sport]
                 )  # pylint: disable=no-member
             else:
-                activities[activity].correction_steps = 0
+                activities[activity_idx].correction_steps = 0
         return activities
 
 
 class GarminDaily:  # pylint: disable=too-few-public-methods
     """Aggregate activities daily."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init."""
         email = os.getenv("GARMIN_EMAIL")
         password = os.getenv("GARMIN_PASSWORD")
@@ -150,7 +167,7 @@ class GarminDaily:  # pylint: disable=too-few-public-methods
         )
         self.api.session.mount("https://", HTTPAdapter(max_retries=retries))
 
-    def login(self):
+    def login(self) -> None:
         """Login."""
         self.api.login()
 
