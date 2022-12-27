@@ -95,7 +95,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         self.total_steps = self.get_steps()
         self.activities = self.aggregate_activities()
 
-    def detect_sport(self, activity: Activity) -> Tuple[str, bool]:  # pylint: disable=no-self-use
+    def detect_sport(self, activity: Activity) -> Tuple[str, bool]:
         """Detect sport.
 
         Return (sport, separate)
