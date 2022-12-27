@@ -1,6 +1,6 @@
 """Garmin data aggregated daily."""
 import os
-from datetime import date
+from datetime import date, datetime
 from typing import Any, Dict, List
 
 from garminconnect import Garmin, GarminConnectConnectionError
@@ -13,7 +13,7 @@ ACTIVITY_STEPS_CORRECTIONS = {
     # also we calculate "wrong" steps that were false detected in activities like roller skiing
     # - we have to decrease the day activity by this steps number because
     # this is not real "steps" you walk
-    "roller skiing": 0.0015,
+    "skate_skiing_ws": 0.0015,  # I calculated it for roller skiing but I believe it's the same for skiing
     "running": 0.00089,
 }
 
@@ -38,7 +38,6 @@ ACTIVITY_FIELDS = [
     "calories",
     "distance",
     "duration",  # float seconds
-    "minutes",
     "elevationGain",
     "locationName",
     "maxHR",
@@ -51,32 +50,20 @@ ACTIVITY_FIELDS = [
 class Activity:
     """Garmin activity."""
 
-    def __init__(self, activity_dict: Dict[str, Any]):
+    def __init__(self, **activity_dict: Dict[str, Any]):
         """Init."""
         for field_path in ACTIVITY_FIELDS:
             if ACTIVITY_PATH_DELIMITER in field_path:
                 # process one level only for simplicity
                 field_name = field_path.split(ACTIVITY_PATH_DELIMITER)[0]
-                val = activity_dict[field_name][field_path.split(ACTIVITY_PATH_DELIMITER)[1]]
+                if isinstance(activity_dict[field_name], str):
+                    val = activity_dict[field_name]
+                else:
+                    val = activity_dict[field_name][field_path.split(ACTIVITY_PATH_DELIMITER)[1]]
             else:
                 field_name = field_path
                 val = activity_dict.get(field_name)
             setattr(self, field_name, val)
-
-        self.sport = self.detect_sport()
-        if self.sport in ACTIVITY_STEPS_CORRECTIONS:
-            self.correction_steps = (
-                self.distance  # pylint: disable=no-member
-                // ACTIVITY_STEPS_CORRECTIONS[self.sport]
-            )  # pylint: disable=no-member
-        else:
-            self.correction_steps = 0
-
-    def detect_sport(self) -> str:
-        """Detect sport."""
-        if self.activityType in SPORT_DETECTION:  # pylint: disable=no-member
-            return SPORT_DETECTION[self.activityType]  # pylint: disable=no-member
-        return SPORT_DETECTION["-unknown-"]
 
     def __repr__(self) -> str:
         """Show object."""
@@ -91,8 +78,16 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         self.api = api
         self.date = day
         self.date_str = self.date.isoformat().split("T")[0]
-        # self.total_steps = self.get_steps()
+        self.total_steps = self.get_steps()
         self.activities = self.aggregate_activities()
+
+    def detect_sport(self, activity: Activity) -> (str, bool):
+        """Detect sport.
+        Return (sport, separate)"""
+        if activity.activityType in SPORT_DETECTION:  # pylint: disable=no-member
+            separate = activity.distance > 8000 and activity.activityType == "cycling"
+            return SPORT_DETECTION[activity.activityType], separate  # pylint: disable=no-member
+        return SPORT_DETECTION["-unknown-"], True
 
     def get_steps(self) -> int:
         """Summarize steps for the day."""
@@ -108,8 +103,34 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         activities_raw = self.get_activities()
         activities = {}
         for activity_dict in activities_raw:
-            activity = Activity(activity_dict)
-            activities[activity.activityType] = activity  # pylint: disable=no-member
+            activity = Activity(**activity_dict)
+            sport, separate = self.detect_sport(activity)
+            if separate:
+                sport = f"{sport} {activity.startTimeLocal}"
+            if sport not in activities:
+                activities[sport] = []
+            activities[sport].append(activity)  # pylint: disable=no-member
+        for activity in activities:
+            activities[activity] = Activity(
+                activityType=activities[activity][0].activityType,
+                averageHR=sum(activity.averageHR for activity in activities[activity]) / len(activities[activity]),
+                calories=sum(activity.calories for activity in activities[activity]),
+                distance=sum(activity.distance for activity in activities[activity]),
+                duration=sum(activity.duration for activity in activities[activity]),
+                elevationGain=sum(activity.elevationGain for activity in activities[activity]),
+                locationName=activities[activity][0].locationName,
+                maxHR=max(activity.maxHR for activity in activities[activity]),
+                maxSpeed=max(activity.maxSpeed for activity in activities[activity]),
+                startTimeLocal=min(activity.startTimeLocal for activity in activities[activity]),
+                steps=sum(0 if activity.steps is None else activity.steps for activity in activities[activity]),
+            )
+            if activities[activity] in ACTIVITY_STEPS_CORRECTIONS:
+                activities[activity].correction_steps = (
+                        activities[activity].distance  # pylint: disable=no-member
+                        // ACTIVITY_STEPS_CORRECTIONS[activities[activity].sport]
+                )  # pylint: disable=no-member
+            else:
+                activities[activity].correction_steps = 0
         return activities
 
 

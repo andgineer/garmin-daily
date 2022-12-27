@@ -34,6 +34,6 @@ print(days_to_fill)
 
 daily = GarminDaily()
 daily.login()
-day = daily[date(2022, 12, 26)]
+day = daily[date(2022, 12, 25)]
 # day = daily[date(2021, 6, 23)]
 print(day.activities)
