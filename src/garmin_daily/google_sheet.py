@@ -1,5 +1,6 @@
 """Export Garmin data to Google Sheet."""
 from datetime import date, datetime
+from pprint import pprint
 
 import gspread
 
@@ -34,6 +35,6 @@ print(days_to_fill)
 
 daily = GarminDaily()
 daily.login()
-day = daily[date(2022, 12, 25)]
+day = daily[date(2022, 12, 28)]
 # day = daily[date(2021, 6, 23)]
-print(day.activities)
+pprint(day.activities)
