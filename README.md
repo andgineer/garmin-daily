@@ -7,6 +7,10 @@
 
 # Developers
 
+#### Min Python version
+
+We use `Annotated` so at least Python 3.9
+
 #### Create / activate environment
     . ./activate.sh
 

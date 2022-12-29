@@ -1,13 +1,17 @@
 """Garmin data aggregated daily."""
+
 import os
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date
-from typing import Any, Dict, List, Optional, Tuple
+from enum import Enum
+from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Union, get_type_hints
 
 import urllib3.exceptions
 from garminconnect import Garmin
 from requests.adapters import HTTPAdapter, Retry
+
+from garmin_daily.snake_to_camel import snake_to_camel
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -38,45 +42,65 @@ SPORT_DETECTION: Dict[str, Any] = {
     "-unknown-": "Unknown",
 }
 
+
+class AggFunc(Enum):
+    """Activity field aggregation function."""
+
+    sum = sum
+    max = max
+    min = min
+    average = "average"
+    first = "first"
+
+
+@dataclass()
+class ActivityField:
+    """Activity field description."""
+
+    garmin_field: Optional[
+        str
+    ]  # the field name in Garmin Connect, None if not exists in Garmin activity
+    aggregate: Union[AggFunc, Callable[[Any], Any]]  # aggregate function type or function itself
+
+
 ACTIVITY_PATH_DELIMITER = "/"
-ACTIVITY_FIELDS = {  # Garmin activity filed names translation to Activity attributes
-    "activity_type": f"activityType{ACTIVITY_PATH_DELIMITER}typeKey",
-    "average_hr": "averageHR",
-    "calories": "calories",
-    "distance": "distance",
-    "duration": "duration",
-    "elevation_gain": "elevationGain",
-    "location_name": "locationName",
-    "max_hr": "maxHR",
-    "max_speed": "maxSpeed",
-    "start_time": "startTimeLocal",
-    "steps": "steps",
-}
 
 
 @dataclass
 class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-attributes
     """Garmin activity."""
 
-    activity_type: str
-    average_hr: float
-    calories: float
-    distance: float
-    duration: float  # float seconds
-    elevation_gain: float
-    location_name: str
-    max_hr: float
-    max_speed: float  # km/h??
-    start_time: str
-    steps: int
-    correction_steps: Optional[int] = None
-    sport: Optional[str] = None
+    activity_type: Annotated[
+        str, ActivityField(f"activityType{ACTIVITY_PATH_DELIMITER}typeKey", AggFunc.first)
+    ]
+    average_hr: Annotated[float, ActivityField("averageHR", AggFunc.average)]
+    calories: Annotated[float, ActivityField("", AggFunc.sum)]
+    distance: Annotated[float, ActivityField("", AggFunc.sum)]
+    duration: Annotated[float, ActivityField("", AggFunc.sum)]  # float seconds
+    elevation_gain: Annotated[float, ActivityField("", AggFunc.sum)]
+    location_name: Annotated[str, ActivityField("", AggFunc.first)]
+    max_hr: Annotated[float, ActivityField("maxHR", AggFunc.max)]
+    max_speed: Annotated[float, ActivityField("", AggFunc.max)]  # km/h??
+    start_time: Annotated[str, ActivityField("startTimeLocal", AggFunc.min)]
+    steps: Annotated[int, ActivityField("", AggFunc.sum)]
+
+    correction_steps: Annotated[Optional[int], ActivityField(None, AggFunc.sum)] = None
+    sport: Annotated[Optional[str], ActivityField(None, AggFunc.sum)] = None
 
     @classmethod
     def init_from_garmin_activity(cls, garmin_activity: Dict[str, Any]) -> "Activity":
         """Create Activity object from Garmin Connect activity fields."""
         fields = {}
-        for field_name, field_path in ACTIVITY_FIELDS.items():
+        descr: Dict[str, ActivityField] = {
+            field: get_type_hints(Activity, include_extras=True)[field].__metadata__[0]
+            for field in get_type_hints(Activity, include_extras=True)
+        }
+        for field_name, field_decr in descr.items():
+            field_path = field_decr.garmin_field
+            if field_path is None:
+                continue
+            if field_path == "":
+                field_path = snake_to_camel(field_name)
             if ACTIVITY_PATH_DELIMITER in field_path:
                 # process one level only for simplicity
                 field_path_1 = field_path.split(ACTIVITY_PATH_DELIMITER)[0]
@@ -141,20 +165,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             str, Activity
         ] = {}  # aggregate activities with same name and nearly same intensity
         for activity_name, activity_list in activities.items():
-            activity = Activity(
-                activity_type=activity_list[0].activity_type,
-                average_hr=sum(a.average_hr for a in activity_list) / len(activity_list),
-                calories=sum(a.calories for a in activity_list),
-                distance=sum(a.distance for a in activity_list),
-                duration=sum(a.duration for a in activity_list),
-                elevation_gain=sum(a.elevation_gain for a in activity_list),
-                location_name=activity_list[0].location_name,
-                max_hr=max(a.max_hr for a in activity_list),
-                max_speed=max(a.max_speed for a in activity_list),
-                start_time=min(a.start_time for a in activity_list),
-                steps=sum(0 if a.steps is None else a.steps for a in activity_list),
-                sport=activity_name.split(" ")[0],
-            )
+            activity = self.aggregate_activity(activity_name, activity_list)
             if activity.sport in SPORT_STEPS_CORRECTIONS:
                 # if for the activity we know exact steps number we do not have to estimate
                 activity.correction_steps = activity.steps or int(
@@ -164,6 +175,28 @@ class GarminDay:  # pylint: disable=too-few-public-methods
                 activity.correction_steps = 0
             aggregated[activity_name] = activity
         return aggregated
+
+    @staticmethod
+    def aggregate_activity(activity_name: str, activity_list: List[Activity]) -> Activity:
+        """Aggregate activity from a list of activities."""
+        fields = {}
+        descr: Dict[str, ActivityField] = {
+            field: get_type_hints(Activity, include_extras=True)[field].__metadata__[0]
+            for field in get_type_hints(Activity, include_extras=True)
+        }
+        for field_name, field_decr in descr.items():
+            if field_decr.aggregate in [AggFunc.min, AggFunc.max, AggFunc.sum]:
+                fields[field_name] = field_decr.aggregate.value(  # type: ignore
+                    getattr(activity, field_name) or 0 for activity in activity_list
+                )
+            elif field_decr.aggregate == AggFunc.first:
+                fields[field_name] = getattr(activity_list[0], field_name)
+            elif field_decr.aggregate == AggFunc.average:
+                fields[field_name] = sum(
+                    getattr(activity, field_name) for activity in activity_list
+                ) / len(activity_list)
+        fields["sport"] = activity_name.split(" ")[0]
+        return Activity(**fields)
 
 
 class GarminDaily:  # pylint: disable=too-few-public-methods
