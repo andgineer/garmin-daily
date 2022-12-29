@@ -49,7 +49,7 @@ setuptools.setup(
     packages=setuptools.find_packages(where="src"),
     install_requires=requirements,
     tests_require=tests_requirements,
-    python_requires=">=3.7",
+    python_requires=">=3.9",
     keywords="Garmin Connect Health Google Sheets",
     classifiers=[
         "Programming Language :: Python :: 3",
