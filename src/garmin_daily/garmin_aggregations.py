@@ -85,7 +85,7 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
     steps: Annotated[int, ActivityField("", AggFunc.sum)]
 
     correction_steps: Annotated[Optional[int], ActivityField(None, AggFunc.sum)] = None
-    sport: Annotated[Optional[str], ActivityField(None, AggFunc.sum)] = None
+    sport: Annotated[Optional[str], ActivityField(None, AggFunc.first)] = None
 
     @classmethod
     def init_from_garmin_activity(cls, garmin_activity: Dict[str, Any]) -> "Activity":
