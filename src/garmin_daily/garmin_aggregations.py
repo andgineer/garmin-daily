@@ -31,6 +31,9 @@ SPORT_STEPS_CORRECTIONS = {
 KM_IN_STEP = 0.00085  # in walking
 KM_IN_MINUTE = 0.14
 
+WALKING_SPORT = "Walking"
+WALKING_LOCATION = "Novi Sad"
+
 SPORT_DETECTION: Dict[str, Any] = {
     "running": "Running",
     "elliptical": "Ellipse",
@@ -73,16 +76,17 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
     activity_type: Annotated[
         str, ActivityField(f"activityType{ACTIVITY_PATH_DELIMITER}typeKey", AggFunc.first)
     ]
-    average_hr: Annotated[float, ActivityField("averageHR", AggFunc.average)]
-    calories: Annotated[float, ActivityField("", AggFunc.sum)]
-    distance: Annotated[float, ActivityField("", AggFunc.sum)]
-    duration: Annotated[float, ActivityField("", AggFunc.sum)]  # float seconds
-    elevation_gain: Annotated[float, ActivityField("", AggFunc.sum)]
     location_name: Annotated[str, ActivityField("", AggFunc.first)]
-    max_hr: Annotated[float, ActivityField("maxHR", AggFunc.max)]
-    max_speed: Annotated[float, ActivityField("", AggFunc.max)]  # km/h??
-    start_time: Annotated[str, ActivityField("startTimeLocal", AggFunc.min)]
-    steps: Annotated[int, ActivityField("", AggFunc.sum)]
+    duration: Annotated[float, ActivityField("", AggFunc.sum)]  # float seconds
+
+    average_hr: Annotated[float, ActivityField("averageHR", AggFunc.average)] = None
+    calories: Annotated[float, ActivityField("", AggFunc.sum)] = None
+    distance: Annotated[float, ActivityField("", AggFunc.sum)] = None
+    elevation_gain: Annotated[float, ActivityField("", AggFunc.sum)] = None
+    max_hr: Annotated[float, ActivityField("maxHR", AggFunc.max)] = None
+    max_speed: Annotated[float, ActivityField("", AggFunc.max)] = None  # km/h??
+    start_time: Annotated[str, ActivityField("startTimeLocal", AggFunc.min)] = None
+    steps: Annotated[int, ActivityField("", AggFunc.sum)] = None
 
     correction_steps: Annotated[Optional[int], ActivityField(None, AggFunc.sum)] = None
     sport: Annotated[Optional[str], ActivityField(None, AggFunc.first)] = None
@@ -179,7 +183,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         """Get activities."""
         return self.api.get_activities_by_date(self.date_str, self.date_str, "")  # type: ignore
 
-    def aggregate_activities(self) -> Dict[str, Activity]:
+    def aggregate_activities(self) -> List[Activity]:
         """Aggregate."""
         garmin_activities = self.get_activities()
         activities: Dict[str, List[Activity]] = defaultdict(list)
@@ -188,6 +192,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             sport, separate = self.detect_sport(activity)
             if separate:
                 sport = f"{sport} {activity.start_time}"
+            activity.sport = sport
             activities[sport].append(activity)
         aggregated: Dict[
             str, Activity
@@ -202,7 +207,18 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             else:
                 activity.correction_steps = 0
             aggregated[activity_name] = activity
-        return aggregated
+
+        walking_steps = self.total_steps - sum(
+            activity.correction_steps for activity in aggregated.values()
+        )
+        aggregated[WALKING_SPORT] = Activity(
+            activity_type=WALKING_SPORT,
+            sport=WALKING_SPORT,
+            duration=0,
+            steps=walking_steps,
+            location_name=WALKING_LOCATION,
+        )
+        return [activity for activity in aggregated.values()]
 
     @staticmethod
     def aggregate_activity(activity_name: str, activity_list: List[Activity]) -> Activity:
