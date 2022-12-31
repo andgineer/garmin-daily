@@ -40,6 +40,11 @@ def main() -> None:
     day = daily[date(2022, 12, 28)]
     # day = daily[date(2021, 6, 23)]
     pprint(day.activities)
+    print(f"{day.min_hr=} {day.max_hr=} {day.rest_hr=} {day.average_hr=}")
+    print(
+        f"{day.sleep_time=} {day.sleep_deep_time=} {day.sleep_light_time=} {day.sleep_rem_time=}"
+    )
+    print(f"{day.vo2max=}")
 
 
 if __name__ == "__main__":

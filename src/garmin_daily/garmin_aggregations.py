@@ -130,6 +130,34 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         self.date_str = self.date.isoformat().split("T")[0]
         self.total_steps = self.get_steps()
         self.activities = self.aggregate_activities()
+        self.get_hr()
+        self.get_sleep()
+        self.vo2max = self.get_vo2max()
+
+    def get_vo2max(self) -> float:
+        """Get VO2 max."""
+        return self.api.get_training_status(self.date_str)["mostRecentVO2Max"]["generic"][
+            "vo2MaxValue"
+        ]
+
+    def get_hr(self) -> None:
+        """Set HR attrs."""
+        hr_data = self.api.get_heart_rates(self.date_str)
+        self.max_hr = hr_data["maxHeartRate"]
+        self.min_hr = hr_data["minHeartRate"]
+        self.rest_hr = hr_data["restingHeartRate"]
+        hr_sum = sum(hr[1] for hr in hr_data["heartRateValues"] if hr[1])
+        hr_count = sum(1 for hr in hr_data["heartRateValues"] if hr[1])
+        self.average_hr = hr_sum / hr_count
+        # hr[1] Unix time in ms, datetime.utcfromtimestamp(hr[0] / 1000)
+
+    def get_sleep(self) -> None:
+        """Set sleep attrs."""
+        sleep_data = self.api.get_sleep_data(self.date_str)
+        self.sleep_time = sleep_data["dailySleepDTO"]["sleepTimeSeconds"] // 60 / 60
+        self.sleep_deep_time = sleep_data["dailySleepDTO"]["deepSleepSeconds"] // 60 / 60
+        self.sleep_light_time = sleep_data["dailySleepDTO"]["lightSleepSeconds"] // 60 / 60
+        self.sleep_rem_time = sleep_data["dailySleepDTO"]["remSleepSeconds"] // 60 / 60
 
     def detect_sport(self, activity: Activity) -> Tuple[str, bool]:
         """Detect sport.
