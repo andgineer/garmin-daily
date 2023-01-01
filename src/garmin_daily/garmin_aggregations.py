@@ -15,7 +15,6 @@ from garmin_daily.snake_to_camel import snake_to_camel
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
-
 MAX_LOGIN_RETRY = 5
 
 SPORT_STEPS_CORRECTIONS = {
@@ -77,7 +76,7 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
         str, ActivityField(f"activityType{ACTIVITY_PATH_DELIMITER}typeKey", AggFunc.first)
     ]
     location_name: Annotated[str, ActivityField("", AggFunc.first)]
-    duration: Annotated[float, ActivityField("", AggFunc.sum)]  # float seconds
+    duration: Annotated[Optional[float], ActivityField("", AggFunc.sum)]  # float seconds
 
     average_hr: Annotated[float, ActivityField("averageHR", AggFunc.average)] = None
     calories: Annotated[float, ActivityField("", AggFunc.sum)] = None
@@ -85,11 +84,14 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
     elevation_gain: Annotated[float, ActivityField("", AggFunc.sum)] = None
     max_hr: Annotated[float, ActivityField("maxHR", AggFunc.max)] = None
     max_speed: Annotated[float, ActivityField("", AggFunc.max)] = None  # km/h??
+    average_speed: Annotated[float, ActivityField("", AggFunc.max)] = None
     start_time: Annotated[str, ActivityField("startTimeLocal", AggFunc.min)] = None
     steps: Annotated[int, ActivityField("", AggFunc.sum)] = None
+    moving_duration: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
 
     correction_steps: Annotated[Optional[int], ActivityField(None, AggFunc.sum)] = None
     sport: Annotated[Optional[str], ActivityField(None, AggFunc.first)] = None
+    comment: Annotated[Optional[str], ActivityField(None, AggFunc.first)] = None
 
     @classmethod
     def init_from_garmin_activity(cls, garmin_activity: Dict[str, Any]) -> "Activity":
@@ -119,6 +121,11 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
             fields[field_name] = val
         return Activity(**fields)
 
+    @staticmethod
+    def speed(garmin_speed) -> float:
+        """Converts m/s to km/h and round to 2 digits after point."""
+        return round(garmin_speed * 60 * 60 / 1000, 2)
+
     def __repr__(self) -> str:
         """Show object."""
         return f"<{self.__class__.__name__} {self.__dict__.items()}>"
@@ -126,6 +133,14 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
 
 class GarminDay:  # pylint: disable=too-few-public-methods
     """Aggregate one day Garmin data."""
+    hr_max: float = float()
+    hr_min: float = float()
+    hr_average: float = float()
+    hr_rest: float = float()
+    sleep_time: float = float()
+    sleep_deep_time: float = float()
+    sleep_light_time: float = float()
+    sleep_rem_time: float = float()
 
     def __init__(self, api: Garmin, day: date) -> None:
         """Set useful Garmin day fields as attributes."""
@@ -133,10 +148,10 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         self.date = day
         self.date_str = self.date.isoformat().split("T")[0]
         self.total_steps = self.get_steps()
-        self.activities = self.aggregate_activities()
         self.get_hr()
         self.get_sleep()
         self.vo2max = self.get_vo2max()
+        self.activities = self.aggregate_activities()
 
     def get_vo2max(self) -> float:
         """Get VO2 max."""
@@ -147,12 +162,12 @@ class GarminDay:  # pylint: disable=too-few-public-methods
     def get_hr(self) -> None:
         """Set HR attrs."""
         hr_data = self.api.get_heart_rates(self.date_str)
-        self.max_hr = hr_data["maxHeartRate"]
-        self.min_hr = hr_data["minHeartRate"]
-        self.rest_hr = hr_data["restingHeartRate"]
+        self.hr_max = hr_data["maxHeartRate"]
+        self.hr_min = hr_data["minHeartRate"]
+        self.hr_rest = hr_data["restingHeartRate"]
         hr_sum = sum(hr[1] for hr in hr_data["heartRateValues"] if hr[1])
         hr_count = sum(1 for hr in hr_data["heartRateValues"] if hr[1])
-        self.average_hr = hr_sum / hr_count
+        self.hr_average = hr_sum / hr_count
         # hr[1] Unix time in ms, datetime.utcfromtimestamp(hr[0] / 1000)
 
     def get_sleep(self) -> None:
@@ -167,6 +182,9 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         """Detect sport.
 
         Return (sport, separate)
+
+        If the activity looks like significant one we want to see it separately.
+        For example we would like to aggregate all small bicycle trips but not the big training one.
         """
         if activity.activity_type in SPORT_DETECTION:  # pylint: disable=no-member
             separate = activity.distance > 8000 and activity.activity_type == "cycling"
@@ -184,19 +202,18 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         return self.api.get_activities_by_date(self.date_str, self.date_str, "")  # type: ignore
 
     def aggregate_activities(self) -> List[Activity]:
-        """Aggregate."""
+        """Aggregate activities with same name and nearly same intensity."""
         garmin_activities = self.get_activities()
         activities: Dict[str, List[Activity]] = defaultdict(list)
         for garmin_activity in garmin_activities:
             activity = Activity.init_from_garmin_activity(garmin_activity)
             sport, separate = self.detect_sport(activity)
-            if separate:
+            if separate:  # do not aggregate
                 sport = f"{sport} {activity.start_time}"
-            activity.sport = sport
             activities[sport].append(activity)
         aggregated: Dict[
             str, Activity
-        ] = {}  # aggregate activities with same name and nearly same intensity
+        ] = {}
         for activity_name, activity_list in activities.items():
             activity = self.aggregate_activity(activity_name, activity_list)
             if activity.sport in SPORT_STEPS_CORRECTIONS:
@@ -208,21 +225,28 @@ class GarminDay:  # pylint: disable=too-few-public-methods
                 activity.correction_steps = 0
             aggregated[activity_name] = activity
 
+        aggregated[WALKING_SPORT] = self.aggregated_walking_activity(aggregated)
+        return list(aggregated.values())
+
+    def aggregated_walking_activity(self, aggregated) -> Activity:
+        """Aggregate full day walking into single activity."""
         walking_steps = self.total_steps - sum(
             activity.correction_steps for activity in aggregated.values()
         )
-        aggregated[WALKING_SPORT] = Activity(
+        return Activity(
             activity_type=WALKING_SPORT,
             sport=WALKING_SPORT,
-            duration=0,
+            duration=None,
             steps=walking_steps,
             location_name=WALKING_LOCATION,
+            comment=(f"hr_min={round(self.hr_min, 1)} hr_max={round(self.hr_max, 1)} hr_avg={round(self.hr_average, 1)} "
+                     f"sleep_deep={round(self.sleep_deep_time, 1)} sleep_light={round(self.sleep_light_time, 1)} "
+                     f"sleep_rem={round(self.sleep_rem_time, 1)}")
         )
-        return [activity for activity in aggregated.values()]
 
     @staticmethod
     def aggregate_activity(activity_name: str, activity_list: List[Activity]) -> Activity:
-        """Aggregate activity from a list of activities."""
+        """Aggregate the list of activities into one accumulative activity."""
         fields = {}
         descr: Dict[str, ActivityField] = {
             field: get_type_hints(Activity, include_extras=True)[field].__metadata__[0]
@@ -240,7 +264,11 @@ class GarminDay:  # pylint: disable=too-few-public-methods
                     getattr(activity, field_name) for activity in activity_list
                 ) / len(activity_list)
         fields["sport"] = activity_name.split(" ")[0]
-        return Activity(**fields)
+        activity = Activity(**fields)
+        activity.comment = (f"speed_max={Activity.speed(activity.max_speed)} "
+                            f"speed_avg={Activity.speed(activity.average_speed)} "
+                            f"hr_max={round(activity.max_hr, 2)} hr_avg={round(activity.average_hr, 2)}")
+        return activity
 
 
 class GarminDaily:  # pylint: disable=too-few-public-methods
