@@ -39,7 +39,8 @@ def main() -> None:
     gc = gspread.service_account()
 
     fittness = gc.open("05 Fitness").sheet1
-    locale.setlocale(locale.LC_NUMERIC, "ru_RU")  # todo get locale from Google Sheet
+    # todo get locale from Google Sheet https://github.com/andgineer/garmin-daily/issues/1
+    locale.setlocale(locale.LC_NUMERIC, "ru_RU")
 
     columns_names = fittness.get("A1:M1")[0]
     columns = {name: chr(ord("A") + idx) for idx, name in enumerate(columns_names)}
@@ -98,7 +99,9 @@ def localized_csv_raw(
 
     Use locale to format digits.
     """
-    return field_separator.join([val if isinstance(val, str) else f"{val:n}" for val in row])
+    return field_separator.join(
+        [f"{val:n}" if isinstance(val, float) else str(val) for val in row]
+    )
 
 
 if __name__ == "__main__":

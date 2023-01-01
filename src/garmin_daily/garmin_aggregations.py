@@ -78,15 +78,15 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
     location_name: Annotated[str, ActivityField("", AggFunc.first)]
     duration: Annotated[Optional[float], ActivityField("", AggFunc.sum)]  # float seconds
 
-    average_hr: Annotated[float, ActivityField("averageHR", AggFunc.average)] = None
-    calories: Annotated[float, ActivityField("", AggFunc.sum)] = None
-    distance: Annotated[float, ActivityField("", AggFunc.sum)] = None
-    elevation_gain: Annotated[float, ActivityField("", AggFunc.sum)] = None
-    max_hr: Annotated[float, ActivityField("maxHR", AggFunc.max)] = None
-    max_speed: Annotated[float, ActivityField("", AggFunc.max)] = None  # km/h??
-    average_speed: Annotated[float, ActivityField("", AggFunc.max)] = None
-    start_time: Annotated[str, ActivityField("startTimeLocal", AggFunc.min)] = None
-    steps: Annotated[int, ActivityField("", AggFunc.sum)] = None
+    average_hr: Annotated[Optional[float], ActivityField("averageHR", AggFunc.average)] = None
+    calories: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
+    distance: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
+    elevation_gain: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
+    max_hr: Annotated[Optional[float], ActivityField("maxHR", AggFunc.max)] = None
+    max_speed: Annotated[Optional[float], ActivityField("", AggFunc.max)] = None  # km/h??
+    average_speed: Annotated[Optional[float], ActivityField("", AggFunc.max)] = None
+    start_time: Annotated[Optional[str], ActivityField("startTimeLocal", AggFunc.min)] = None
+    steps: Annotated[Optional[int], ActivityField("", AggFunc.sum)] = None
     moving_duration: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
 
     correction_steps: Annotated[Optional[int], ActivityField(None, AggFunc.sum)] = None
@@ -122,9 +122,9 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
         return Activity(**fields)
 
     @staticmethod
-    def speed(garmin_speed) -> float:
-        """Converts m/s to km/h and round to 2 digits after point."""
-        return round(garmin_speed * 60 * 60 / 1000, 2)
+    def speed(garmin_speed: Optional[float]) -> Optional[float]:
+        """Convert m/s to km/h and round to 2 digits after point."""
+        return round(garmin_speed * 60 * 60 / 1000, 2) if garmin_speed else None
 
     def __repr__(self) -> str:
         """Show object."""
@@ -133,6 +133,7 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
 
 class GarminDay:  # pylint: disable=too-few-public-methods
     """Aggregate one day Garmin data."""
+
     hr_max: float = float()
     hr_min: float = float()
     hr_average: float = float()
@@ -155,7 +156,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
 
     def get_vo2max(self) -> float:
         """Get VO2 max."""
-        return self.api.get_training_status(self.date_str)["mostRecentVO2Max"]["generic"][
+        return self.api.get_training_status(self.date_str)["mostRecentVO2Max"]["generic"][  # type: ignore
             "vo2MaxValue"
         ]
 
@@ -187,9 +188,16 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         For example we would like to aggregate all small bicycle trips but not the big training one.
         """
         if activity.activity_type in SPORT_DETECTION:  # pylint: disable=no-member
-            separate = activity.distance > 8000 and activity.activity_type == "cycling"
+            separate = (
+                activity.distance
+                and activity.distance > 8000
+                and activity.activity_type == "cycling"
+            )
             # todo differentiate sport by season if isinstance is dict
-            return SPORT_DETECTION[activity.activity_type], separate  # pylint: disable=no-member
+            return (  # type: ignore
+                SPORT_DETECTION[activity.activity_type],
+                separate,
+            )  # pylint: disable=no-member
         return SPORT_DETECTION["-unknown-"], True
 
     def get_steps(self) -> int:
@@ -211,15 +219,16 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             if separate:  # do not aggregate
                 sport = f"{sport} {activity.start_time}"
             activities[sport].append(activity)
-        aggregated: Dict[
-            str, Activity
-        ] = {}
+        aggregated: Dict[str, Activity] = {}
         for activity_name, activity_list in activities.items():
             activity = self.aggregate_activity(activity_name, activity_list)
             if activity.sport in SPORT_STEPS_CORRECTIONS:
                 # if for the activity we know exact steps number we do not have to estimate
-                activity.correction_steps = activity.steps or int(
-                    activity.distance / 1000 // SPORT_STEPS_CORRECTIONS[activity.sport]
+                activity.correction_steps = (
+                    activity.steps
+                    or int(activity.distance / 1000 // SPORT_STEPS_CORRECTIONS[activity.sport])
+                    if activity.distance
+                    else 0
                 )
             else:
                 activity.correction_steps = 0
@@ -228,20 +237,24 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         aggregated[WALKING_SPORT] = self.aggregated_walking_activity(aggregated)
         return list(aggregated.values())
 
-    def aggregated_walking_activity(self, aggregated) -> Activity:
+    def aggregated_walking_activity(self, activities: Dict[str, Activity]) -> Activity:
         """Aggregate full day walking into single activity."""
-        walking_steps = self.total_steps - sum(
-            activity.correction_steps for activity in aggregated.values()
+        correction_steps = sum(
+            activity.correction_steps
+            for activity in activities.values()
+            if activity.correction_steps
         )
         return Activity(
             activity_type=WALKING_SPORT,
             sport=WALKING_SPORT,
             duration=None,
-            steps=walking_steps,
+            steps=self.total_steps - correction_steps,
             location_name=WALKING_LOCATION,
-            comment=(f"hr_min={round(self.hr_min, 1)} hr_max={round(self.hr_max, 1)} hr_avg={round(self.hr_average, 1)} "
-                     f"sleep_deep={round(self.sleep_deep_time, 1)} sleep_light={round(self.sleep_light_time, 1)} "
-                     f"sleep_rem={round(self.sleep_rem_time, 1)}")
+            comment=(
+                f"hr_min={round(self.hr_min, 1)} hr_max={round(self.hr_max, 1)} hr_avg={round(self.hr_average, 1)} "
+                f"sleep_deep={round(self.sleep_deep_time, 1)} sleep_light={round(self.sleep_light_time, 1)} "
+                f"sleep_rem={round(self.sleep_rem_time, 1)}"
+            ),
         )
 
     @staticmethod
@@ -265,9 +278,13 @@ class GarminDay:  # pylint: disable=too-few-public-methods
                 ) / len(activity_list)
         fields["sport"] = activity_name.split(" ")[0]
         activity = Activity(**fields)
-        activity.comment = (f"speed_max={Activity.speed(activity.max_speed)} "
-                            f"speed_avg={Activity.speed(activity.average_speed)} "
-                            f"hr_max={round(activity.max_hr, 2)} hr_avg={round(activity.average_hr, 2)}")
+        activity.comment = (
+            f"speed_max={Activity.speed(activity.max_speed)} "
+            f"speed_avg={Activity.speed(activity.average_speed)} "
+            f"hr_max={round(activity.max_hr, 2)} hr_avg={round(activity.average_hr, 2)}"
+            if activity.max_hr and activity.average_hr
+            else ""
+        )
         return activity
 
 
