@@ -1,6 +1,7 @@
 """Export Garmin data to Google Sheet."""
 import locale
-from datetime import date, datetime
+import time
+from datetime import date, datetime, timedelta
 from enum import IntEnum
 from typing import List, Optional, Union
 
@@ -17,6 +18,8 @@ class Weekdays(IntEnum):
 
 GYM_DAYS = [Weekdays.Monday.value, Weekdays.Tuesday.value, Weekdays.Friday.value]
 GYM_LOCATION = "The classic Bulevar Oslodođenja"
+BATCH_SIZE = 7  # Add days by batches to prevent block grom Garmin API
+API_DELAY = 15  # seconds to wait between batches
 
 
 def sheet_week_day(day: date) -> int:
@@ -44,31 +47,43 @@ def main() -> None:
 
     columns_names = fittness.get("A1:M1")[0]
     columns = {name: chr(ord("A") + idx) for idx, name in enumerate(columns_names)}
-    print(columns_names)
 
-    last_date: datetime = datetime.strptime(fittness.get(columns["Date"] + "2")[0][0], "%Y-%m-%d")
+    last_date = datetime.strptime(fittness.get(columns["Date"] + "2")[0][0], "%Y-%m-%d").date()
     print("Last filled date", last_date)
+    fill_from_date = last_date + timedelta(days=1)
 
-    days_to_fill = (datetime.now() - last_date).days
+    days_to_fill = (datetime.now().date() - fill_from_date).days
     print("Days to fill", days_to_fill)
-
-    # for start_date in [date(2022, 1, 27), date(2022, 3, 9), date(2022, 4, 23), date(2021, 10, 14)]:
-    #     # start_date = last_date + timedelta(days=day_idx)
 
     daily = GarminDaily()
     daily.login()
 
-    csv = create_day_rows(daily, date(2022, 12, 25))  # date(2021, 6, 23)
-    print(csv)
+    batches_num = days_to_fill // BATCH_SIZE
+    if days_to_fill % BATCH_SIZE:
+        batches_num += 1
+    for batch in range(batches_num):
+        for day_num in range(BATCH_SIZE):
+            day = last_date + timedelta(days=batch * BATCH_SIZE + day_num)
+            if day >= datetime.now().date():
+                break
+            csv = create_day_rows(daily, day)
+            for row in csv:
+                print("; ".join(row))
+            fittness.insert_rows(csv, row=2, value_input_option="USER_ENTERED")
+        time.sleep(API_DELAY)
 
 
-def create_day_rows(daily: GarminDaily, day: date) -> List[str]:
+def create_day_rows(daily: GarminDaily, day: date) -> List[List[str]]:
     """Sheet rows for the day."""
     gday = daily[day]
     if day.weekday() in GYM_DAYS:
         gday.activities.append(
             Activity(
-                activity_type="Gym", sport="Gym", duration=30 * 60, location_name=GYM_LOCATION
+                activity_type="Gym",
+                sport="Gym",
+                duration=30 * 60,
+                location_name=GYM_LOCATION,
+                comment="",
             )
         )
     day_rows: List[List[Optional[Union[str, int, float]]]] = [
@@ -77,14 +92,16 @@ def create_day_rows(daily: GarminDaily, day: date) -> List[str]:
             activity.sport,
             round(activity.duration / 60) if activity.duration else "",
             day.strftime("%Y-%m-%d"),
-            round(activity.distance / 1000, 2) if activity.distance else "",
+            round(activity.distance / 1000, 2)
+            if isinstance(activity.distance, float)
+            else activity.distance or "",
             activity.steps or "",
             activity.comment,
             week_num(day),
             round(activity.duration / 60 / 60, 1) if activity.duration else 0,
             sheet_week_day(day),
             round(gday.hr_rest, 1),
-            round(gday.sleep_time, 1),
+            round(gday.sleep_time, 1) if gday.sleep_time else "",
             gday.vo2max,
         ]
         for activity in gday.activities
@@ -93,15 +110,13 @@ def create_day_rows(daily: GarminDaily, day: date) -> List[str]:
 
 
 def localized_csv_raw(
-    row: List[Optional[Union[str, int, float]]], field_separator: str = ";"
-) -> str:
+    row: List[Optional[Union[str, int, float]]]
+) -> List[str]:
     """Convert fields to CSV row.
 
     Use locale to format digits.
     """
-    return field_separator.join(
-        [f"{val:n}" if isinstance(val, float) else str(val) for val in row]
-    )
+    return [f"{val:n}" if isinstance(val, float) else str(val) for val in row]
 
 
 if __name__ == "__main__":

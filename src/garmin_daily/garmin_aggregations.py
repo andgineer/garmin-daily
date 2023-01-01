@@ -17,6 +17,13 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 MAX_LOGIN_RETRY = 5
 
+
+KM_IN_STEP = 0.00085  # in walking
+KM_IN_MINUTE = 0.14
+
+WALKING_SPORT = "Walking"
+WALKING_LOCATION = "Novi Sad"
+
 SPORT_STEPS_CORRECTIONS = {
     # km / step - we use it to calculate distance by steps.
     # also we calculate "wrong" steps that were false detected in activities like roller skiing
@@ -25,13 +32,8 @@ SPORT_STEPS_CORRECTIONS = {
     "Roller skiing": 0.0015,
     "Skiing": 0.0015,  # I calculated it for roller skiing hope it's the same for skiing
     "Running": 0.00089,
+    WALKING_SPORT: 0.00085,
 }
-
-KM_IN_STEP = 0.00085  # in walking
-KM_IN_MINUTE = 0.14
-
-WALKING_SPORT = "Walking"
-WALKING_LOCATION = "Novi Sad"
 
 SPORT_DETECTION: Dict[str, Any] = {
     "running": "Running",
@@ -80,7 +82,7 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
 
     average_hr: Annotated[Optional[float], ActivityField("averageHR", AggFunc.average)] = None
     calories: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
-    distance: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
+    distance: Annotated[Optional[Union[float, str]], ActivityField("", AggFunc.sum)] = None
     elevation_gain: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
     max_hr: Annotated[Optional[float], ActivityField("maxHR", AggFunc.max)] = None
     max_speed: Annotated[Optional[float], ActivityField("", AggFunc.max)] = None  # km/h??
@@ -134,14 +136,14 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
 class GarminDay:  # pylint: disable=too-few-public-methods
     """Aggregate one day Garmin data."""
 
-    hr_max: float = float()
-    hr_min: float = float()
-    hr_average: float = float()
+    hr_max: Optional[float] = None
+    hr_min: Optional[float] = None
+    hr_average: Optional[float] = None
     hr_rest: float = float()
-    sleep_time: float = float()
-    sleep_deep_time: float = float()
-    sleep_light_time: float = float()
-    sleep_rem_time: float = float()
+    sleep_time: Optional[float] = None
+    sleep_deep_time: Optional[float] = None
+    sleep_light_time: Optional[float] = None
+    sleep_rem_time: Optional[float] = None
 
     def __init__(self, api: Garmin, day: date) -> None:
         """Set useful Garmin day fields as attributes."""
@@ -166,18 +168,22 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         self.hr_max = hr_data["maxHeartRate"]
         self.hr_min = hr_data["minHeartRate"]
         self.hr_rest = hr_data["restingHeartRate"]
-        hr_sum = sum(hr[1] for hr in hr_data["heartRateValues"] if hr[1])
-        hr_count = sum(1 for hr in hr_data["heartRateValues"] if hr[1])
-        self.hr_average = hr_sum / hr_count
-        # hr[1] Unix time in ms, datetime.utcfromtimestamp(hr[0] / 1000)
+        if hr_data["heartRateValues"] is not None:
+            hr_sum = sum(hr[1] for hr in hr_data["heartRateValues"] if hr[1])
+            hr_count = sum(1 for hr in hr_data["heartRateValues"] if hr[1])
+            self.hr_average = hr_sum / hr_count
+            # hr[1] Unix time in ms, datetime.utcfromtimestamp(hr[0] / 1000)
+        else:
+            self.hr_average = None
 
     def get_sleep(self) -> None:
         """Set sleep attrs."""
         sleep_data = self.api.get_sleep_data(self.date_str)
-        self.sleep_time = sleep_data["dailySleepDTO"]["sleepTimeSeconds"] // 60 / 60
-        self.sleep_deep_time = sleep_data["dailySleepDTO"]["deepSleepSeconds"] // 60 / 60
-        self.sleep_light_time = sleep_data["dailySleepDTO"]["lightSleepSeconds"] // 60 / 60
-        self.sleep_rem_time = sleep_data["dailySleepDTO"]["remSleepSeconds"] // 60 / 60
+        if sleep_data["dailySleepDTO"]["sleepTimeSeconds"] is not None:
+            self.sleep_time = sleep_data["dailySleepDTO"]["sleepTimeSeconds"] // 60 / 60
+            self.sleep_deep_time = sleep_data["dailySleepDTO"]["deepSleepSeconds"] // 60 / 60
+            self.sleep_light_time = sleep_data["dailySleepDTO"]["lightSleepSeconds"] // 60 / 60
+            self.sleep_rem_time = sleep_data["dailySleepDTO"]["remSleepSeconds"] // 60 / 60
 
     def detect_sport(self, activity: Activity) -> Tuple[str, bool]:
         """Detect sport.
@@ -190,7 +196,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         if activity.activity_type in SPORT_DETECTION:  # pylint: disable=no-member
             separate = (
                 activity.distance
-                and activity.distance > 8000
+                and isinstance(activity.distance, int) and activity.distance > 8000
                 and activity.activity_type == "cycling"
             )
             # todo differentiate sport by season if isinstance is dict
@@ -227,7 +233,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
                 activity.correction_steps = (
                     activity.steps
                     or int(activity.distance / 1000 // SPORT_STEPS_CORRECTIONS[activity.sport])
-                    if activity.distance
+                    if isinstance(activity.distance, float)
                     else 0
                 )
             else:
@@ -239,7 +245,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
 
     def aggregated_walking_activity(self, activities: Dict[str, Activity]) -> Activity:
         """Aggregate full day walking into single activity."""
-        correction_steps = sum(
+        steps = self.total_steps - sum(
             activity.correction_steps
             for activity in activities.values()
             if activity.correction_steps
@@ -248,13 +254,19 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             activity_type=WALKING_SPORT,
             sport=WALKING_SPORT,
             duration=None,
-            steps=self.total_steps - correction_steps,
+            steps=steps
+            if steps > 0
+            else f"=0{steps}",  # create formula to simplify manual fill in days without data
             location_name=WALKING_LOCATION,
             comment=(
                 f"hr_min={round(self.hr_min, 1)} hr_max={round(self.hr_max, 1)} hr_avg={round(self.hr_average, 1)} "
-                f"sleep_deep={round(self.sleep_deep_time, 1)} sleep_light={round(self.sleep_light_time, 1)} "
-                f"sleep_rem={round(self.sleep_rem_time, 1)}"
+                if self.hr_average
+                else ""
+                f"sleep_deep={round(self.sleep_deep_time, 1)} sleep_light={round(self.sleep_light_time, 1)} sleep_rem={round(self.sleep_rem_time, 1)}"
+                if self.sleep_time
+                else ""
             ),
+            distance=f"={steps}*{SPORT_STEPS_CORRECTIONS[WALKING_SPORT]:n}",
         )
 
     @staticmethod
@@ -273,9 +285,22 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             elif field_decr.aggregate == AggFunc.first:
                 fields[field_name] = getattr(activity_list[0], field_name)
             elif field_decr.aggregate == AggFunc.average:
-                fields[field_name] = sum(
-                    getattr(activity, field_name) for activity in activity_list
-                ) / len(activity_list)
+                num = sum(
+                    getattr(activity, field_name)
+                    for activity in activity_list
+                    if getattr(activity, field_name)
+                )
+                if num:
+                    fields[field_name] = (
+                        sum(
+                            getattr(activity, field_name)
+                            for activity in activity_list
+                            if getattr(activity, field_name)
+                        )
+                        / num
+                    )
+                else:
+                    fields[field_name] = None
         fields["sport"] = activity_name.split(" ")[0]
         activity = Activity(**fields)
         activity.comment = (
