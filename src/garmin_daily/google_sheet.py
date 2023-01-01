@@ -1,8 +1,8 @@
 """Export Garmin data to Google Sheet."""
+import locale
 from datetime import date, datetime
 from enum import IntEnum
-from typing import List, Union
-import locale
+from typing import List, Optional, Union
 
 import gspread
 
@@ -11,6 +11,7 @@ from garmin_daily import Activity, GarminDaily
 
 class Weekdays(IntEnum):
     """Weekdays for datetime.weekday."""
+
     Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday = range(7)
 
 
@@ -35,13 +36,10 @@ def week_num(day: date) -> int:
 
 def main() -> None:
     """Debug."""
-    # set decimal point delimiters as in my Goog Sheets
-    locale.setlocale(locale.LC_NUMERIC, 'ru_RU')
-    print(locale.str(1.1))
-
     gc = gspread.service_account()
 
     fittness = gc.open("05 Fitness").sheet1
+    locale.setlocale(locale.LC_NUMERIC, "ru_RU")  # todo get locale from Google Sheet
 
     columns_names = fittness.get("A1:M1")[0]
     columns = {name: chr(ord("A") + idx) for idx, name in enumerate(columns_names)}
@@ -59,10 +57,11 @@ def main() -> None:
     daily = GarminDaily()
     daily.login()
 
-    create_day_rows(daily, date(2022, 12, 25))  # date(2021, 6, 23)
+    csv = create_day_rows(daily, date(2022, 12, 25))  # date(2021, 6, 23)
+    print(csv)
 
 
-def create_day_rows(daily: GarminDaily, day: date):
+def create_day_rows(daily: GarminDaily, day: date) -> List[str]:
     """Sheet rows for the day."""
     gday = daily[day]
     if day.weekday() in GYM_DAYS:
@@ -71,7 +70,7 @@ def create_day_rows(daily: GarminDaily, day: date):
                 activity_type="Gym", sport="Gym", duration=30 * 60, location_name=GYM_LOCATION
             )
         )
-    day_rows: List[List[Union[str, int, float]]] = [
+    day_rows: List[List[Optional[Union[str, int, float]]]] = [
         [
             activity.location_name,
             activity.sport,
@@ -89,11 +88,12 @@ def create_day_rows(daily: GarminDaily, day: date):
         ]
         for activity in gday.activities
     ]
-    for row in day_rows:
-        print(localized_csv_raw(row))
+    return [localized_csv_raw(row) for row in day_rows]
 
 
-def localized_csv_raw(row: List[Union[str, int, float]], field_separator: str = ";") -> str:
+def localized_csv_raw(
+    row: List[Optional[Union[str, int, float]]], field_separator: str = ";"
+) -> str:
     """Convert fields to CSV row.
 
     Use locale to format digits.
