@@ -3,7 +3,7 @@
 import os
 from collections import defaultdict
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from enum import Enum
 from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Union, get_type_hints
 
@@ -24,11 +24,7 @@ KM_IN_MINUTE = 0.14
 WALKING_SPORT = "Walking"
 WALKING_LOCATION = "Novi Sad"
 
-SPORT_STEPS_CORRECTIONS = {
-    # km / step - we use it to calculate distance by steps.
-    # also we calculate "wrong" steps that were false detected in activities like roller skiing
-    # - we have to decrease the day activity by this steps number because
-    # this is not real "steps" you walk
+SPORT_STEP_LENGTH_KM = {
     "Roller skiing": 0.0015,
     "Skiing": 0.0015,  # I calculated it for roller skiing hope it's the same for skiing
     "Running": 0.00089,
@@ -40,8 +36,10 @@ SPORT_DETECTION: Dict[str, Any] = {
     "elliptical": "Ellipse",
     "cycling": "Bicycle",
     "skate_skiing_ws": {
-        "Skiing": {},
-        "Roller skiing": {},  # startTimeLocal>=2021-4-17, <=2021.11.16
+        "Skiing": [
+            {"from": date(2021, 4, 17), "to": date(2021, 11, 16)},
+        ],
+        "default": "Roller skiing",
     },
     "-unknown-": "Unknown",
 }
@@ -91,7 +89,10 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
     steps: Annotated[Optional[int], ActivityField("", AggFunc.sum)] = None
     moving_duration: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
 
-    correction_steps: Annotated[Optional[int], ActivityField(None, AggFunc.sum)] = None
+    # in non-Walking activity this is steps calculated in non-walking activities for this day
+    # we should subtract them from Walking activity steps to get "real" walking steps
+    non_walking_steps: Annotated[Optional[int], ActivityField(None, AggFunc.sum)] = None
+
     sport: Annotated[Optional[str], ActivityField(None, AggFunc.first)] = None
     comment: Annotated[Optional[str], ActivityField(None, AggFunc.first)] = None
 
@@ -124,9 +125,21 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
         return Activity(**fields)
 
     @staticmethod
-    def speed(garmin_speed: Optional[float]) -> Optional[float]:
+    def to_km_h(garmin_speed: Optional[float]) -> Optional[float]:
         """Convert m/s to km/h and round to 2 digits after point."""
         return round(garmin_speed * 60 * 60 / 1000, 2) if garmin_speed else None
+
+    def estimate_steps(self) -> int:
+        """Estimate steps for the activity.
+
+        Garmin do not provide steps for some activities.
+        Actually it erroneously calculate steps during such activities like roller skiing.
+        We have to estimate this steps to subtract them from Walking activity steps.
+        """
+        if self.sport in SPORT_STEP_LENGTH_KM and isinstance(self.distance, float):
+            return int(self.distance / 1000 // SPORT_STEP_LENGTH_KM[self.sport])
+        else:
+            return 0
 
     def __repr__(self) -> str:
         """Show object."""
@@ -225,51 +238,83 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             sport, separate = self.detect_sport(activity)
             if separate:  # do not aggregate
                 sport = f"{sport} {activity.start_time}"
+            if isinstance(sport, dict):
+                for key, val in sport.items():
+                    if isinstance(val, list):
+                        for interval in val:
+                            if (
+                                interval["from"]
+                                <= datetime.strptime(
+                                    activity.start_time, "%Y-%m-%d %H:%M:%S"
+                                ).date()
+                                >= interval["to"]
+                            ):
+                                sport = key
+                                break
+                    if isinstance(sport, str):
+                        break
+                else:
+                    sport = sport["default"]
             activities[sport].append(activity)
-        aggregated: Dict[str, Activity] = {}
-        for activity_name, activity_list in activities.items():
-            activity = self.aggregate_activity(activity_name, activity_list)
-            if activity.sport in SPORT_STEPS_CORRECTIONS:
-                # if for the activity we know exact steps number we do not have to estimate
-                activity.correction_steps = (
-                    activity.steps
-                    or int(activity.distance / 1000 // SPORT_STEPS_CORRECTIONS[activity.sport])
-                    if isinstance(activity.distance, float)
-                    else 0
-                )
-            else:
-                activity.correction_steps = 0
-            aggregated[activity_name] = activity
-
-        aggregated[WALKING_SPORT] = self.aggregated_walking_activity(aggregated)
+        aggregated: Dict[str, Activity] = {
+            activity_name: self.aggregate_activity(activity_name, activity_list)
+            for activity_name, activity_list in activities.items()
+        }
+        aggregated[WALKING_SPORT] = self.aggregate_walking_activity(aggregated)
         return list(aggregated.values())
 
-    def aggregated_walking_activity(self, activities: Dict[str, Activity]) -> Activity:
+    def aggregate_walking_activity(self, activities: Dict[str, Activity]) -> Activity:
         """Aggregate full day walking into single activity."""
-        steps = self.total_steps - sum(
-            activity.correction_steps
-            for activity in activities.values()
-            if activity.correction_steps
-        )
         return Activity(
             activity_type=WALKING_SPORT,
             sport=WALKING_SPORT,
             duration=None,
-            steps=steps
-            if steps > 0  # todo remove Google Sheet specifics to google_sheet.py
-            else f"=0{steps}",  # create formula to simplify manual fill in days without data
-            location_name=WALKING_LOCATION,
-            comment=(
-                f"hr_min={round(self.hr_min, 1)} hr_max={round(self.hr_max, 1)} hr_avg={round(self.hr_average, 1)} "
-                if self.hr_average
-                else ""
-                f"sleep_deep={round(self.sleep_deep_time, 1)} sleep_light={round(self.sleep_light_time, 1)} sleep_rem={round(self.sleep_rem_time, 1)}"
-                if self.sleep_time
-                else ""
+            steps=self.total_steps,
+            non_walking_steps=sum(
+                activity.steps for activity in activities.values() if activity.steps
             ),
-            # todo remove Google Sheet specifics to google_sheet.py
-            distance=f"={steps}*{SPORT_STEPS_CORRECTIONS[WALKING_SPORT]:n}",
+            location_name=WALKING_LOCATION,
+            comment=self.dump_attrs(self, "hr_min", "hr_max", "hr_avg:hr_average", precision=0)
+            + " "
+            + self.dump_attrs(
+                self,
+                "sleep_deep:sleep_deep_time",
+                "sleep_light:sleep_light_time",
+                "sleep_rem:sleep_rem_time",
+            ),
+            distance=None,
         )
+
+    @staticmethod
+    def dump_float(val: Optional[float], precision: int = 1) -> str:
+        """Rounded representation if float or empty."""
+        if isinstance(val, float):
+            val = round(val, precision)
+            if precision == 0:
+                val = int(val)
+        return f"{val}" if val else ""
+
+    @staticmethod
+    def dump_attrs(
+        obj, *attributes_names: str, func: Callable[[Any], Any] = None, precision: int = 1
+    ) -> str:
+        """Dump the obj's attributes as 'name=value'.
+
+        Skip None or empty ("", 0).
+        If there is ":" in the name then treat it as dump_name:attr_name
+        """
+        result = []
+        for name in attributes_names:
+            if ":" in name:
+                dump_name, attr_name = name.split(":")
+            else:
+                dump_name = attr_name = name
+            if getattr(obj, attr_name):
+                val = getattr(obj, attr_name)
+                if func:
+                    val = func(val)
+                result.append(f"{dump_name}={GarminDay.dump_float(val, precision=precision)}")
+        return " ".join(result)
 
     @staticmethod
     def aggregate_activity(activity_name: str, activity_list: List[Activity]) -> Activity:
@@ -287,11 +332,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             elif field_decr.aggregate == AggFunc.first:
                 fields[field_name] = getattr(activity_list[0], field_name)
             elif field_decr.aggregate == AggFunc.average:
-                num = sum(
-                    getattr(activity, field_name)
-                    for activity in activity_list
-                    if getattr(activity, field_name)
-                )
+                num = sum(1 for activity in activity_list if getattr(activity, field_name))
                 if num:
                     fields[field_name] = (
                         sum(
@@ -303,15 +344,21 @@ class GarminDay:  # pylint: disable=too-few-public-methods
                     )
                 else:
                     fields[field_name] = None
-        fields["sport"] = activity_name.split(" ")[0]
+        fields["sport"] = activity_name.split(" ")[0]  # just sport name without start time
         activity = Activity(**fields)
         activity.comment = (
-            f"speed_max={Activity.speed(activity.max_speed)} "
-            f"speed_avg={Activity.speed(activity.average_speed)} "
-            f"hr_max={round(activity.max_hr, 2)} hr_avg={round(activity.average_hr, 2)}"
-            if activity.max_hr and activity.average_hr
-            else ""
+            GarminDay.dump_attrs(
+                activity,
+                "speed_max:max_speed",
+                "speed_avg:average_speed",
+                func=Activity.to_km_h,
+                precision=2,
+            )
+            + " "
+            + GarminDay.dump_attrs(activity, "hr_max:max_hr", "hr_avg:average_hr", precision=0)
         )
+        if not activity.steps:
+            activity.steps = activity.estimate_steps()
         return activity
 
 

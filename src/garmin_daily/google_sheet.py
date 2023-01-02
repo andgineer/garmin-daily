@@ -3,19 +3,20 @@ import locale
 import time
 from datetime import date, datetime, timedelta
 from enum import IntEnum
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 import click
 import gspread
 import gspread.exceptions
+import pandas as pd
 
-from garmin_daily import Activity, GarminDaily
+from garmin_daily import SPORT_STEP_LENGTH_KM, WALKING_SPORT, Activity, GarminDaily
 
 
 class Weekdays(IntEnum):
     """Weekdays for datetime.weekday."""
 
-    Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday = range(7)
+    MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY = range(7)
 
 
 # Weekdays based on the PC locale, not the Google Sheet locale
@@ -52,13 +53,13 @@ def week_num(day: date) -> int:
     nargs=1,
 )
 @click.option(
-    "--gym-weekdays",
-    "-w",
+    "--gym-days",
+    "-g",
     "gym_weekdays",
     default=[
-        PCWeekdays[Weekdays.Monday.value],
-        PCWeekdays[Weekdays.Tuesday.value],
-        PCWeekdays[Weekdays.Friday.value],
+        PCWeekdays[Weekdays.MONDAY.value],
+        PCWeekdays[Weekdays.TUESDAY.value],
+        PCWeekdays[Weekdays.FRIDAY.value],
     ],
     show_default=True,
     type=click.Choice(PCWeekdays, case_sensitive=False),
@@ -84,9 +85,9 @@ def week_num(day: date) -> int:
     nargs=1,
 )
 @click.option(  # todo get locale from Google Sheet https://github.com/andgineer/garmin-daily/issues/1
-    "--locale",
+    "--sheet-locale",
     "-l",
-    "locale_string",
+    "sheet_locale",
     default="ru_RU",
     show_default=True,
     help="Google Sheet locale for numbers formatting.",
@@ -106,42 +107,40 @@ def main(
     sheet: str,
     gym_weekdays: str,
     gym_duration: int,
-    locale_string: str,
+    sheet_locale: str,
     gym_location: str,
     force: bool,
 ) -> None:
     """Fill Google sheet with data from Garmin.
 
-    Garmin credentials should be in ??
-    Garmin creds?
+    Documentation https://andgineer.github.io/garmin-daily/
     """
     print(f"Add Garmin activities to Google Sheet '{sheet}'")
     print(f"Auto create '{gym_location}' gym {gym_duration} minutes training on {gym_weekdays}")
 
-    fittness = open_google_sheet(sheet, locale_string)
+    fitness, columns = open_google_sheet(sheet, sheet_locale)
 
-    columns_names = fittness.get("A1:M1")[0]
-    columns = {name: chr(ord("A") + idx) for idx, name in enumerate(columns_names)}
-
-    fill_from_date = get_first_date_to_fill(fittness, columns, sheet)
-
-    days_to_fill = (datetime.now().date() - fill_from_date).days
-    print("Days to fill", days_to_fill)
+    fill_from_date, days_to_fill = get_first_date_to_fill(fitness, columns)
     if days_to_fill > DAY_TO_ADD_WITHOUT_FORCE and not force:
         print("\nToo many days to add.\nUse --force to confirm.")
         exit(1)
 
-    gym_days = [PCWeekdays.index(weekday) for weekday in gym_weekdays]
-
     add_rows_from_garmin(
-        days_to_fill, fill_from_date, fittness, gym_days, gym_duration, gym_location
+        fitness=fitness,
+        columns=columns,
+        fill_from_date=fill_from_date,
+        days_to_fill=days_to_fill,
+        gym_days=[PCWeekdays.index(weekday) for weekday in gym_weekdays],
+        gym_duration=gym_duration,
+        gym_location=gym_location,
     )
 
 
 def add_rows_from_garmin(
-    days_to_fill: int,
+    fitness: gspread.Worksheet,
+    columns: Dict[str, str],
     fill_from_date: date,
-    fittness: gspread.Worksheet,
+    days_to_fill: int,
     gym_days: List[int],
     gym_duration: int,
     gym_location: str,
@@ -157,36 +156,89 @@ def add_rows_from_garmin(
             day = fill_from_date + timedelta(days=batch * BATCH_SIZE + day_num)
             if day >= datetime.now().date():
                 break
-            csv = create_day_rows(daily, day, gym_duration, gym_days, gym_location)
+            csv = create_day_rows(
+                daily=daily,
+                columns=columns,
+                day=day,
+                gym_duration=gym_duration,
+                gym_days=gym_days,
+                gym_location=gym_location,
+            )
+            enrich_rows(fitness, columns, csv)
             for row in csv:
                 print("; ".join(row))
-            fittness.insert_rows(csv, row=2, value_input_option="USER_ENTERED")
+            fitness.insert_rows(csv, row=2, value_input_option="USER_ENTERED")
         time.sleep(API_DELAY)
 
 
+DISTANCE_IDX = 4
+DATE_IDX = 3
+
+
+def enrich_rows(fitness: gspread.Worksheet, columns: Dict[str, str], rows: List[List[str]]):
+    """Add steps data from the spreadsheet."""
+
+    def cell(name: str, row: int) -> str:
+        """Cell value."""
+        return fitness.acell(columns[name] + str(row)).value
+
+    df = pd.DataFrame(fitness.get_all_records())
+    df.set_index("Date")
+    print(df[df["Date"] == "2020-10-17"]["Steps"])
+    print(df.head())
+    print(type(df.iloc[1]["Date"]))
+
+    # walking_steps = {}
+    # for row_num in range(1, fitness.row_count + 1):
+    #     if cell("Sport", row_num) == "Walking":
+    #         day = datetime.strptime(cell("Date", row_num), "%Y-%m-%d").date()
+    #         steps = cell("Steps", row_num)
+    #         if steps:
+    #             walking_steps[day] = int(steps)
+    # print(walking_steps)
+    exit()
+
+    for row in rows:
+
+        if row[DISTANCE_IDX].startswith("=0*"):
+            # Garmin did not return data for the day
+            # try to look in the table
+            pass
+
+
 def get_first_date_to_fill(
-    fittness: gspread.Worksheet, columns: Dict[str, str], sheet_name: str
-) -> date:
-    """Get last filled date and calculate date to fill from."""
-    date_cell = fittness.get(columns["Date"] + "2")
+    fitness: gspread.Worksheet, columns: Dict[str, str]
+) -> Tuple[date, int]:
+    """Get last filled date and calculate date interval to fill.
+
+    Returns (start_date, days_to_fill)
+    """
+    sheet_name = fitness.spreadsheet.title
+    date_cell = fitness.acell(columns["Date"] + "2").value
     if not date_cell:
         print(
-            f"\nCannot find last filled date in '{sheet_name}'.'{fittness.title}', cell {columns['Date']}2"
+            f"\nCannot find last filled date in Google Sheet '{sheet_name}'.'{fitness.title}', cell {columns['Date']}2"
         )
         exit(1)
     try:
-        last_date = datetime.strptime(date_cell[0][0], "%Y-%m-%d").date()
+        last_date = datetime.strptime(date_cell, "%Y-%m-%d").date()
     except ValueError as e:
         print(
-            f"\nWrong date string in '{sheet_name}'.'{fittness.title}', cell {columns['Date']}2:\n{e}"
+            f"\nWrong date string in Google Sheet '{sheet_name}'.'{fitness.title}', cell {columns['Date']}2:\n{e}"
         )
         exit(1)
     print("Last filled date", last_date)
-    return last_date + timedelta(days=1)
+    fill_from_date = last_date + timedelta(days=1)
+    days_to_fill = (datetime.now().date() - fill_from_date).days
+    print("Days to fill", days_to_fill)
+    return fill_from_date, days_to_fill
 
 
-def open_google_sheet(sheet: str, locale_string: str) -> gspread.Worksheet:
-    """Open Google Sheet."""
+def open_google_sheet(sheet: str, locale_string: str) -> Tuple[gspread.Worksheet, Dict[str, str]]:
+    """Open Google Sheet.
+
+    Return worksheet and columns map (title: id)
+    """
     gc = gspread.service_account()
     try:
         worksheet = gc.open(sheet).sheet1
@@ -194,20 +246,31 @@ def open_google_sheet(sheet: str, locale_string: str) -> gspread.Worksheet:
         print(f"\nGoogle sheet '{sheet}' not found.")
         exit(1)
     locale.setlocale(locale.LC_NUMERIC, locale_string)
-    return worksheet
+
+    columns_names = worksheet.get("A1:M1")[0]
+    columns = {name: chr(ord("A") + idx) for idx, name in enumerate(columns_names)}
+    return worksheet, columns
 
 
 def create_day_rows(
-    daily: GarminDaily, day: date, duration: int, gym_days: List[int], gym_location: str
+    daily: GarminDaily,
+    columns: Dict[str, str],
+    day: date,
+    gym_duration: int,
+    gym_days: List[int],
+    gym_location: str,
 ) -> List[List[str]]:
-    """Sheet rows for the day."""
+    """Sheet rows for the day.
+
+    todo use column titles https://github.com/andgineer/garmin-daily/issues/2
+    """
     gday = daily[day]
     if day.weekday() in gym_days:
         gday.activities.append(
             Activity(
                 activity_type="Gym",
                 sport="Gym",
-                duration=duration * 60,
+                duration=gym_duration * 60,
                 location_name=gym_location,
                 comment="",
             )
@@ -219,16 +282,22 @@ def create_day_rows(
             round(activity.duration / 60) if activity.duration else "",
             day.strftime("%Y-%m-%d"),
             round(activity.distance / 1000, 2)
-            if isinstance(activity.distance, float)
-            else activity.distance or "",
-            activity.steps or "",
+            if activity.distance
+            else f"={activity.steps}*{SPORT_STEP_LENGTH_KM[activity.sport]:.2n}"
+            if activity.sport in SPORT_STEP_LENGTH_KM
+            else "",
+            f"={activity.steps}-{activity.non_walking_steps}"
+            if activity.non_walking_steps
+            else "",
             activity.comment,
             week_num(day),
             round(activity.duration / 60 / 60, 1) if activity.duration else 0,
             sheet_week_day(day),
-            round(gday.hr_rest, 1),
-            round(gday.sleep_time, 1) if gday.sleep_time else "",
-            gday.vo2max,
+            round(gday.hr_rest, 1) if activity.sport == WALKING_SPORT and gday.hr_rest else "",
+            round(gday.sleep_time, 1)
+            if activity.sport == WALKING_SPORT and gday.sleep_time
+            else "",
+            gday.vo2max if activity.sport == WALKING_SPORT and gday.vo2max else "",
         ]
         for activity in gday.activities
     ]
@@ -236,10 +305,7 @@ def create_day_rows(
 
 
 def localized_csv_raw(row: List[Optional[Union[str, int, float]]]) -> List[str]:
-    """Convert fields to CSV row.
-
-    Use locale to format digits.
-    """
+    """Convert fields to the Google Sheet locale specific string representation."""
     return [f"{val:n}" if isinstance(val, float) else str(val) for val in row]
 
 
