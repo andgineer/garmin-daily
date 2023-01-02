@@ -304,7 +304,7 @@ def create_day_rows(
             day.strftime("%Y-%m-%d"),
             round(activity.distance / 1000, 2)
             if activity.distance
-            else f"={activity.steps}*{SPORT_STEP_LENGTH_KM[activity.sport]:.2n}"
+            else f"=({activity.steps}-{activity.non_walking_steps if activity.non_walking_steps else 0})*{SPORT_STEP_LENGTH_KM[activity.sport]:.2n}"
             if activity.sport in SPORT_STEP_LENGTH_KM
             else "",
             f"={activity.steps}-{activity.non_walking_steps}"
