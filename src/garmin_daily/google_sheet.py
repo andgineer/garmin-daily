@@ -309,7 +309,7 @@ def create_day_rows(
             else "",
             f"={activity.steps}-{activity.non_walking_steps}"
             if activity.non_walking_steps
-            else "",
+            else f"={activity.steps}" if activity.sport == WALKING_SPORT else "",
             activity.comment,
             week_num(day),
             round(activity.duration / 60 / 60, 1) if activity.duration else 0,
