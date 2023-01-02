@@ -9,6 +9,7 @@ import click
 import gspread
 import gspread.exceptions
 import pandas as pd
+from functools import lru_cache
 
 from garmin_daily import SPORT_STEP_LENGTH_KM, WALKING_SPORT, Activity, GarminDaily
 
@@ -149,8 +150,6 @@ def add_rows_from_garmin(
     daily = GarminDaily()
     daily.login()
 
-    fitness_df = load_as_pandas(fitness)
-
     batches_num = days_to_fill // BATCH_SIZE
     if days_to_fill % BATCH_SIZE:
         batches_num += 1
@@ -167,17 +166,23 @@ def add_rows_from_garmin(
                 gym_days=gym_days,
                 gym_location=gym_location,
             )
-            enrich_rows(fitness_df, csv)
+            look_for_steps(fitness, csv)
             for row in csv:
                 print("; ".join(row))
             fitness.insert_rows(csv, row=2, value_input_option="USER_ENTERED")
         time.sleep(API_DELAY)
 
 
-def load_as_pandas(fitness: gspread.Worksheet) -> pd.DataFrame:
-    fitness_df = pd.DataFrame(fitness.get_all_records())
-    fitness_df.set_index("Date", inplace=True)
-    return fitness_df
+@lru_cache(maxsize=None)
+def fitness_df(fitness: gspread.Worksheet) -> pd.DataFrame:
+    """Loads the Google Sheet as Pandas DataFrame.
+
+    Cached so we use it as lazy load - if we do not need it we do not load it.
+    """
+    print("."*20, " Reading full Google Sheet into memory for quick search ", "."*20)
+    df = pd.DataFrame(fitness.get_all_records())
+    df.set_index("Date", inplace=True)
+    return df
 
 
 DISTANCE_IDX = 4
@@ -185,14 +190,26 @@ DATE_IDX = 3
 STEPS_IDX = 5
 
 
-def enrich_rows(fitness_df: pd.DataFrame, rows: List[List[str]]):
-    """Add steps data from the spreadsheet."""
+def look_for_steps(fitness: gspread.Worksheet, rows: List[List[str]]):
+    """Add steps data from earlier entered in the spreadsheet.
+
+    We need that only if we need very old data - for some reason Garmin API
+    do not return steps more than for last three months.
+    May be we can use some flag to get them - in the Garmin App you can see this steps.
+    So in such situation if we already had entered steps manually in the Google Sheet
+    we can find and use them.
+
+    Totally un-probable but in fact just once I needed this mode.
+    If you have steps from Garmin API we won't read the Google Sheet to Pandas DataFrame
+    so this code won't take any resources.
+    """
 
     def get_steps(date: str) -> int:
         """Get steps for the date like '2022-02-16'."""
-        steps = fitness_df[(fitness_df.index == date)]["Steps"]
+        steps = fitness_df(fitness)[(fitness_df(fitness).index == date)]["Steps"]
         steps = steps[steps != ""]
-        return steps[steps > 0].values[0]
+        steps = steps[steps > 0].values
+        return steps[0] if steps.size > 0 else 0
 
     for row in rows:
         no_steps_distance = "=0*"
