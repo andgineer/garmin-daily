@@ -1,5 +1,5 @@
 #!make
-VERSION := $(shell cat src/garmin_dayly/version.py | cut -d= -f2 | sed 's/\"//g; s/ //')
+VERSION := $(shell cat src/garmin_daily/version.py | cut -d= -f2 | sed 's/\"//g; s/ //')
 export VERSION
 
 version:

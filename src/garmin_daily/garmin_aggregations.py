@@ -196,7 +196,8 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         if activity.activity_type in SPORT_DETECTION:  # pylint: disable=no-member
             separate = (
                 activity.distance
-                and isinstance(activity.distance, int) and activity.distance > 8000
+                and isinstance(activity.distance, int)
+                and activity.distance > 8000
                 and activity.activity_type == "cycling"
             )
             # todo differentiate sport by season if isinstance is dict
@@ -255,7 +256,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             sport=WALKING_SPORT,
             duration=None,
             steps=steps
-            if steps > 0
+            if steps > 0  # todo remove Google Sheet specifics to google_sheet.py
             else f"=0{steps}",  # create formula to simplify manual fill in days without data
             location_name=WALKING_LOCATION,
             comment=(
@@ -266,6 +267,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
                 if self.sleep_time
                 else ""
             ),
+            # todo remove Google Sheet specifics to google_sheet.py
             distance=f"={steps}*{SPORT_STEPS_CORRECTIONS[WALKING_SPORT]:n}",
         )
 

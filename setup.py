@@ -37,11 +37,11 @@ setuptools.setup(
     author="Andrey Sorokin",
     author_email="andrey@sorokin.engineer",
     description=("Aggregate data from Garmin Connect daily."),
-    # entry_points={
-    #     "console_scripts": [
-    #         "goodreads-export=goodreads.goodreads_csv_to_markdown:main",
-    #     ],
-    # },
+    entry_points={
+        "console_scripts": [
+            "garmin-daily=garmin_daily.google_sheet:main",
+        ],
+    },
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://andgineer.github.io/garmin-daily/",
