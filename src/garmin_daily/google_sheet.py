@@ -148,6 +148,9 @@ def add_rows_from_garmin(
     """Add activities from Garmin to the Google Sheet."""
     daily = GarminDaily()
     daily.login()
+
+    fitness_df = load_as_pandas(fitness)
+
     batches_num = days_to_fill // BATCH_SIZE
     if days_to_fill % BATCH_SIZE:
         batches_num += 1
@@ -164,46 +167,47 @@ def add_rows_from_garmin(
                 gym_days=gym_days,
                 gym_location=gym_location,
             )
-            enrich_rows(fitness, columns, csv)
+            enrich_rows(fitness_df, csv)
             for row in csv:
                 print("; ".join(row))
             fitness.insert_rows(csv, row=2, value_input_option="USER_ENTERED")
         time.sleep(API_DELAY)
 
 
+def load_as_pandas(fitness: gspread.Worksheet) -> pd.DataFrame:
+    fitness_df = pd.DataFrame(fitness.get_all_records())
+    fitness_df.set_index("Date", inplace=True)
+    return fitness_df
+
+
 DISTANCE_IDX = 4
 DATE_IDX = 3
+STEPS_IDX = 5
 
 
-def enrich_rows(fitness: gspread.Worksheet, columns: Dict[str, str], rows: List[List[str]]):
+def enrich_rows(fitness_df: pd.DataFrame, rows: List[List[str]]):
     """Add steps data from the spreadsheet."""
 
-    def cell(name: str, row: int) -> str:
-        """Cell value."""
-        return fitness.acell(columns[name] + str(row)).value
-
-    df = pd.DataFrame(fitness.get_all_records())
-    df.set_index("Date")
-    print(df[df["Date"] == "2020-10-17"]["Steps"])
-    print(df.head())
-    print(type(df.iloc[1]["Date"]))
-
-    # walking_steps = {}
-    # for row_num in range(1, fitness.row_count + 1):
-    #     if cell("Sport", row_num) == "Walking":
-    #         day = datetime.strptime(cell("Date", row_num), "%Y-%m-%d").date()
-    #         steps = cell("Steps", row_num)
-    #         if steps:
-    #             walking_steps[day] = int(steps)
-    # print(walking_steps)
-    exit()
+    def get_steps(date: str) -> int:
+        """Get steps for the date like '2022-02-16'."""
+        steps = fitness_df[(fitness_df.index == date)]["Steps"]
+        steps = steps[steps != ""]
+        return steps[steps > 0].values[0]
 
     for row in rows:
-
-        if row[DISTANCE_IDX].startswith("=0*"):
+        no_steps_distance = "=0*"
+        steps_correction = "=0"
+        if row[DISTANCE_IDX].startswith(no_steps_distance):
             # Garmin did not return data for the day
             # try to look in the table
-            pass
+            manually_entered_steps = str(get_steps(row[DATE_IDX]))
+            if row[STEPS_IDX].startswith(steps_correction):
+                manually_entered_steps = f"{manually_entered_steps}{row[STEPS_IDX][len(steps_correction):]}"
+                row[STEPS_IDX] = f"={manually_entered_steps}"
+            else:
+                # no correction formula
+                row[STEPS_IDX] = manually_entered_steps
+            row[DISTANCE_IDX] = f"=({manually_entered_steps})*{row[DISTANCE_IDX][len(no_steps_distance):]}"
 
 
 def get_first_date_to_fill(
