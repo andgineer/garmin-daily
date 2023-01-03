@@ -17,10 +17,6 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 MAX_LOGIN_RETRY = 5
 
-
-KM_IN_STEP = 0.00085  # in walking
-KM_IN_MINUTE = 0.14
-
 WALKING_SPORT = "Walking"
 WALKING_LOCATION = "Novi Sad"
 
@@ -28,7 +24,7 @@ SPORT_STEP_LENGTH_KM = {
     "Roller skiing": 0.0015,
     "Skiing": 0.0015,  # I calculated it for roller skiing hope it's the same for skiing
     "Running": 0.00089,
-    WALKING_SPORT: 0.00085,
+    WALKING_SPORT: 0.00085,  # experimentally 0.14 km/min = 8.5 km/h
 }
 
 SPORT_DETECTION: Dict[str, Any] = {

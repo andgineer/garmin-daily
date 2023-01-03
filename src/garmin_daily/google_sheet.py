@@ -121,16 +121,16 @@ def main(
 
     fitness, columns = open_google_sheet(sheet, sheet_locale)
 
-    fill_from_date, days_to_fill = get_first_date_to_fill(fitness, columns)
-    if days_to_fill > DAY_TO_ADD_WITHOUT_FORCE and not force:
+    start_date, days_to_add = detect_days_to_add(fitness, columns)
+    if days_to_add > DAY_TO_ADD_WITHOUT_FORCE and not force:
         print("\nToo many days to add.\nUse --force to confirm.")
         exit(1)
 
     add_rows_from_garmin(
         fitness=fitness,
         columns=columns,
-        fill_from_date=fill_from_date,
-        days_to_fill=days_to_fill,
+        start_date=start_date,
+        days_to_add=days_to_add,
         gym_days=[PCWeekdays.index(weekday) for weekday in gym_weekdays],
         gym_duration=gym_duration,
         gym_location=gym_location,
@@ -140,8 +140,8 @@ def main(
 def add_rows_from_garmin(
     fitness: gspread.Worksheet,
     columns: Dict[str, str],
-    fill_from_date: date,
-    days_to_fill: int,
+    start_date: date,
+    days_to_add: int,
     gym_days: List[int],
     gym_duration: int,
     gym_location: str,
@@ -150,12 +150,12 @@ def add_rows_from_garmin(
     daily = GarminDaily()
     daily.login()
 
-    batches_num = days_to_fill // BATCH_SIZE
-    if days_to_fill % BATCH_SIZE:
+    batches_num = days_to_add // BATCH_SIZE
+    if days_to_add % BATCH_SIZE:
         batches_num += 1
     for batch in range(batches_num):
         for day_num in range(BATCH_SIZE):
-            day = fill_from_date + timedelta(days=batch * BATCH_SIZE + day_num)
+            day = start_date + timedelta(days=batch * BATCH_SIZE + day_num)
             if day >= datetime.now().date():
                 break
             csv = create_day_rows(
@@ -227,12 +227,12 @@ def look_for_steps(fitness: gspread.Worksheet, rows: List[List[str]]):
             row[DISTANCE_IDX] = f"=({manually_entered_steps})*{row[DISTANCE_IDX][len(no_steps_distance):]}"
 
 
-def get_first_date_to_fill(
+def detect_days_to_add(
     fitness: gspread.Worksheet, columns: Dict[str, str]
 ) -> Tuple[date, int]:
-    """Get last filled date and calculate date interval to fill.
+    """Get last filled date and calculate number of days to add till today.
 
-    Returns (start_date, days_to_fill)
+    Returns (start_date, days_to_add)
     """
     sheet_name = fitness.spreadsheet.title
     date_cell = fitness.acell(columns["Date"] + "2").value
@@ -249,10 +249,10 @@ def get_first_date_to_fill(
         )
         exit(1)
     print("Last filled date", last_date)
-    fill_from_date = last_date + timedelta(days=1)
-    days_to_fill = (datetime.now().date() - fill_from_date).days
-    print("Days to fill", days_to_fill)
-    return fill_from_date, days_to_fill
+    start_date = last_date + timedelta(days=1)
+    days_to_add = (datetime.now().date() - start_date).days
+    print("Days to fill", days_to_add)
+    return start_date, days_to_add
 
 
 def open_google_sheet(sheet: str, locale_string: str) -> Tuple[gspread.Worksheet, Dict[str, str]]:
