@@ -1,3 +1,4 @@
+"""Convert names from Python (snake-name) to Java (camelName) name convention and vice-versa."""
 import re
 
 
