@@ -132,7 +132,7 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
         Actually it erroneously calculate steps during such activities like roller skiing.
         We have to estimate this steps to subtract them from Walking activity steps.
         """
-        if self.sport in SPORT_STEP_LENGTH_KM and isinstance(self.distance, float):
+        if self.sport in SPORT_STEP_LENGTH_KM and isinstance(self.distance, (float, int)):
             return int(self.distance / 1000 // SPORT_STEP_LENGTH_KM[self.sport])
         else:
             return 0
@@ -178,10 +178,10 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         self.hr_min = hr_data["minHeartRate"]
         self.hr_rest = hr_data["restingHeartRate"]
         if hr_data["heartRateValues"] is not None:
+            # hr[0] Unix time in ms, datetime.utcfromtimestamp(hr[0] / 1000)
             hr_sum = sum(hr[1] for hr in hr_data["heartRateValues"] if hr[1])
             hr_count = sum(1 for hr in hr_data["heartRateValues"] if hr[1])
-            self.hr_average = hr_sum / hr_count
-            # hr[1] Unix time in ms, datetime.utcfromtimestamp(hr[0] / 1000)
+            self.hr_average = hr_sum / hr_count if hr_count else None
         else:
             self.hr_average = None
 

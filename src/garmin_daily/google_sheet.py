@@ -12,6 +12,7 @@ import pandas as pd
 from functools import lru_cache
 
 from garmin_daily import SPORT_STEP_LENGTH_KM, WALKING_SPORT, Activity, GarminDaily
+from garmin_daily.version import VERSION
 
 
 class Weekdays(IntEnum):
@@ -104,6 +105,14 @@ def week_num(day: date) -> int:
     help=f"Force to add more than {DAY_TO_ADD_WITHOUT_FORCE} days.",
     nargs=1,
 )
+@click.option(
+    "--version",
+    "version",
+    is_flag=True,
+    default=False,
+    help=f"Show garmin-daily version.",
+    nargs=1,
+)
 def main(
     sheet: str,
     gym_weekdays: str,
@@ -111,11 +120,16 @@ def main(
     sheet_locale: str,
     gym_location: str,
     force: bool,
+    version: bool,
 ) -> None:
     """Fill Google sheet with data from Garmin.
 
     Documentation https://andgineer.github.io/garmin-daily/
     """
+    if version:
+        print(f"garmin-daily {VERSION}")
+        exit(0)
+
     print(f"Add Garmin activities to Google Sheet '{sheet}'")
     print(f"Auto create '{gym_location}' gym {gym_duration} minutes training on {gym_weekdays}")
 
@@ -166,7 +180,7 @@ def add_rows_from_garmin(
                 gym_days=gym_days,
                 gym_location=gym_location,
             )
-            look_for_steps(fitness, csv)
+            search_missed_steps_in_sheet(fitness, csv)
             for row in csv:
                 print("; ".join(row))
             fitness.insert_rows(csv, row=2, value_input_option="USER_ENTERED")
@@ -185,21 +199,21 @@ def fitness_df(fitness: gspread.Worksheet) -> pd.DataFrame:
     return df
 
 
-DISTANCE_IDX = 4
+DISTANCE_IDX = 4  # todo use columns to detect the ids
 DATE_IDX = 3
 STEPS_IDX = 5
 
 
-def look_for_steps(fitness: gspread.Worksheet, rows: List[List[str]]):
-    """Add steps data from earlier entered in the spreadsheet.
+def search_missed_steps_in_sheet(fitness: gspread.Worksheet, rows: List[List[str]]):
+    """Add missed in Garmin API steps data from earlier entered in the spreadsheet.
 
     We need that only if we need very old data - for some reason Garmin API
     do not return steps more than for last three months.
-    May be we can use some flag to get them - in the Garmin App you can see this steps.
-    So in such situation if we already had entered steps manually in the Google Sheet
+    May be we can use some flag to get them - in the Garmin App you can see this steps but not from the API.
+    Anyway in such situation if we already had entered steps manually in the Google Sheet
     we can find and use them.
 
-    Totally un-probable but in fact just once I needed this mode.
+    Just once I needed this mode so I keep it in the code.
     If you have steps from Garmin API we won't read the Google Sheet to Pandas DataFrame
     so this code won't take any resources.
     """
