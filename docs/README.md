@@ -9,7 +9,10 @@ Fill Google Sheets with fitness data from Garmin Connect.
 ## Credentials
 
 ### Garmin Connect
-Place into env var `GARMIN_EMAIL` and `GARMIN_PASSWORD` respectfully.
+Place login and password into env vars `GARMIN_EMAIL` and `GARMIN_PASSWORD` respectfully
+
+    export GARMIN_EMAIL="andrey@sorokin.engineer"
+    export GARMIN_PASSWORD='password'
 
 ### Google Sheets
 Get Google credentials for Google Sheet as explained in [gspread:Using Service Account](https://docs.gspread.org/en/latest/oauth2.html#enable-api-access-for-a-project)
