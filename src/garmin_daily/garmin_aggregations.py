@@ -19,7 +19,9 @@ MAX_LOGIN_RETRY = 5
 
 WALKING_SPORT = "Walking"
 WALKING_LOCATION = "Novi Sad"
-SPORT_UNIQUENESS = "\t"  # symbol to add to sport session name uniqueness so this session won't aggregate
+SPORT_UNIQUENESS = (
+    "\t"  # symbol to add to sport session name uniqueness so this session won't aggregate
+)
 
 SPORT_STEP_LENGTH_KM = {
     "Roller skiing": 0.0015,
@@ -45,11 +47,11 @@ SPORT_DETECTION: Dict[str, Any] = {
 class AggFunc(Enum):
     """Activity field aggregation function."""
 
-    sum = sum
-    max = max
-    min = min
-    average = "average"
-    first = "first"
+    SUM = sum
+    MAX = max
+    MIN = min
+    AVERAGE = "average"
+    FIRST = "first"
 
 
 @dataclass()
@@ -70,28 +72,28 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
     """Garmin activity."""
 
     activity_type: Annotated[
-        str, ActivityField(f"activityType{ACTIVITY_PATH_DELIMITER}typeKey", AggFunc.first)
+        str, ActivityField(f"activityType{ACTIVITY_PATH_DELIMITER}typeKey", AggFunc.FIRST)
     ]
-    location_name: Annotated[str, ActivityField("", AggFunc.first)]
-    duration: Annotated[Optional[float], ActivityField("", AggFunc.sum)]  # float seconds
+    location_name: Annotated[str, ActivityField("", AggFunc.FIRST)]
+    duration: Annotated[Optional[float], ActivityField("", AggFunc.SUM)]  # float seconds
 
-    average_hr: Annotated[Optional[float], ActivityField("averageHR", AggFunc.average)] = None
-    calories: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
-    distance: Annotated[Optional[Union[float, str]], ActivityField("", AggFunc.sum)] = None
-    elevation_gain: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
-    max_hr: Annotated[Optional[float], ActivityField("maxHR", AggFunc.max)] = None
-    max_speed: Annotated[Optional[float], ActivityField("", AggFunc.max)] = None  # km/h??
-    average_speed: Annotated[Optional[float], ActivityField("", AggFunc.max)] = None
-    start_time: Annotated[Optional[str], ActivityField("startTimeLocal", AggFunc.min)] = None
-    steps: Annotated[Optional[int], ActivityField("", AggFunc.sum)] = None
-    moving_duration: Annotated[Optional[float], ActivityField("", AggFunc.sum)] = None
+    average_hr: Annotated[Optional[float], ActivityField("averageHR", AggFunc.AVERAGE)] = None
+    calories: Annotated[Optional[float], ActivityField("", AggFunc.SUM)] = None
+    distance: Annotated[Optional[Union[float, int]], ActivityField("", AggFunc.SUM)] = None
+    elevation_gain: Annotated[Optional[float], ActivityField("", AggFunc.SUM)] = None
+    max_hr: Annotated[Optional[float], ActivityField("maxHR", AggFunc.MAX)] = None
+    max_speed: Annotated[Optional[float], ActivityField("", AggFunc.MAX)] = None  # km/h??
+    average_speed: Annotated[Optional[float], ActivityField("", AggFunc.MAX)] = None
+    start_time: Annotated[Optional[str], ActivityField("startTimeLocal", AggFunc.MIN)] = None
+    steps: Annotated[Optional[int], ActivityField("", AggFunc.SUM)] = None
+    moving_duration: Annotated[Optional[float], ActivityField("", AggFunc.SUM)] = None
 
     # in non-Walking activity this is steps calculated in non-walking activities for this day
     # we should subtract them from Walking activity steps to get "real" walking steps
-    non_walking_steps: Annotated[Optional[int], ActivityField(None, AggFunc.sum)] = None
+    non_walking_steps: Annotated[Optional[int], ActivityField(None, AggFunc.SUM)] = None
 
-    sport: Annotated[Optional[str], ActivityField(None, AggFunc.first)] = None
-    comment: Annotated[Optional[str], ActivityField(None, AggFunc.first)] = None
+    sport: Annotated[Optional[str], ActivityField(None, AggFunc.FIRST)] = None
+    comment: Annotated[Optional[str], ActivityField(None, AggFunc.FIRST)] = None
 
     @classmethod
     def init_from_garmin_activity(cls, garmin_activity: Dict[str, Any]) -> "Activity":
@@ -131,15 +133,17 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
         """
         if self.sport in SPORT_STEP_LENGTH_KM and isinstance(self.distance, (float, int)):
             return int(self.distance / 1000 // SPORT_STEP_LENGTH_KM[self.sport])
-        else:
-            return 0
+        return 0
 
     def __repr__(self) -> str:
         """Show object."""
-        return f"<{self.__class__.__name__}({', '.join(f'{key}={val}' for key, val in self.__dict__.items())}>"
+        return (
+            f"<{self.__class__.__name__}"
+            f"({', '.join(f'{key}={val}' for key, val in self.__dict__.items())}>"
+        )
 
 
-class GarminDay:  # pylint: disable=too-few-public-methods
+class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-attributes
     """Aggregate one day Garmin data."""
 
     hr_max: Optional[float] = None
@@ -154,15 +158,20 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         self.date_str = self.date.isoformat().split("T")[0]
         self.total_steps = self.get_steps()
         self.get_hr()
-        self.sleep_time, self.sleep_deep_time, self.sleep_light_time, self.sleep_rem_time = self.get_sleep()
+        (
+            self.sleep_time,
+            self.sleep_deep_time,
+            self.sleep_light_time,
+            self.sleep_rem_time,
+        ) = self.get_sleep()
         self.vo2max = self.get_vo2max()
         self.activities = self.aggregate_activities()
 
     def get_vo2max(self) -> float:
         """Get VO2 max."""
-        return self.api.get_training_status(self.date_str)["mostRecentVO2Max"]["generic"][  # type: ignore
-            "vo2MaxValue"
-        ]
+        return self.api.get_training_status(self.date_str)["mostRecentVO2Max"][  # type: ignore
+            "generic"
+        ]["vo2MaxValue"]
 
     def get_hr(self) -> None:
         """Set HR attrs."""
@@ -195,21 +204,34 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         Return (sport, separate)
 
         If the activity looks like significant one we want to see it separately.
-        For example we would like to aggregate all small bicycle trips but not the big training one.
+        For example we would like to aggregate all small bicycle trips
+        but not the big training one.
         """
-        if activity.activity_type in SPORT_DETECTION:  # pylint: disable=no-member
-            separate = (
-                activity.distance
-                and isinstance(activity.distance, (int, float))
-                and activity.distance > 8000
-                and activity.activity_type == "cycling"
-            )
-            # todo differentiate sport by season if isinstance is dict
-            return (  # type: ignore
-                SPORT_DETECTION[activity.activity_type],
-                separate,
-            )  # pylint: disable=no-member
-        return SPORT_DETECTION["-unknown-"], True
+        if activity.activity_type not in SPORT_DETECTION:  # pylint: disable=no-member
+            return SPORT_DETECTION["-unknown-"], True
+        separate = (
+            activity.distance
+            and isinstance(activity.distance, (int, float))
+            and activity.distance > 8000
+            and activity.activity_type == "cycling"
+        )
+        sport = SPORT_DETECTION[activity.activity_type]
+        if isinstance(sport, dict) and activity.start_time:
+            for key, val in sport.items():
+                if isinstance(val, list):
+                    for interval in val:
+                        if (
+                            interval["from"]
+                            >= datetime.strptime(activity.start_time, "%Y-%m-%d %H:%M:%S").date()
+                            <= interval["to"]
+                        ):
+                            sport = key
+                            break
+                if isinstance(sport, str):
+                    break
+            else:
+                sport = sport["default"]
+        return sport, separate  # type: ignore
 
     def get_steps(self) -> int:
         """Summarize steps for the day."""
@@ -229,23 +251,6 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             sport, separate = self.detect_sport(activity)
             if separate:  # do not aggregate
                 sport = f"{sport}{SPORT_UNIQUENESS}{activity.start_time}"
-            if isinstance(sport, dict):
-                for key, val in sport.items():
-                    if isinstance(val, list):
-                        for interval in val:
-                            if (
-                                interval["from"]
-                                >= datetime.strptime(
-                                    activity.start_time, "%Y-%m-%d %H:%M:%S"
-                                ).date()
-                                <= interval["to"]
-                            ):
-                                sport = key
-                                break
-                    if isinstance(sport, str):
-                        break
-                else:
-                    sport = sport["default"]
             activities[sport].append(activity)
         aggregated: Dict[str, Activity] = {
             activity_name: self.aggregate_activity(activity_name, activity_list)
@@ -278,7 +283,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def dump_float(val: Optional[float], precision: int = 1) -> str:
-        """Rounded representation if float or empty."""
+        """Round representation if float or empty."""
         if isinstance(val, float):
             val = round(val, precision)
             if precision == 0:
@@ -287,7 +292,10 @@ class GarminDay:  # pylint: disable=too-few-public-methods
 
     @staticmethod
     def dump_attrs(
-        obj, *attributes_names: str, func: Callable[[Any], Any] = None, precision: int = 1
+        obj: Any,
+        *attributes_names: str,
+        func: Optional[Callable[[Any], Any]] = None,
+        precision: int = 1,
     ) -> str:
         """Dump the obj's attributes as 'name=value'.
 
@@ -302,7 +310,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
                 dump_name = attr_name = name
             if getattr(obj, attr_name):
                 val = getattr(obj, attr_name)
-                if func:
+                if func is not None:
                     val = func(val)
                 result.append(f"{dump_name}={GarminDay.dump_float(val, precision=precision)}")
         return " ".join(result)
@@ -317,8 +325,10 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         }
         for field_name, field_decr in descr.items():
             fields[field_name] = GarminDay.aggregate_field(activity_list, field_decr, field_name)
-        fields["sport"] = activity_name.split(SPORT_UNIQUENESS)[0]  # just sport name without start time
-        activity = Activity(**fields)
+        fields["sport"] = activity_name.split(SPORT_UNIQUENESS)[
+            0
+        ]  # just sport name without start time
+        activity = Activity(**fields)  # type: ignore
         activity.comment = (
             GarminDay.dump_attrs(
                 activity,
@@ -335,29 +345,28 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         return activity
 
     @staticmethod
-    def aggregate_field(activity_list: List[Activity], field_decr: ActivityField, field_name: str) -> Optional[Union[int, float, str]]:
-        """Aggregate field_name according to field_descr.
-
-        """
-        if field_decr.aggregate in [AggFunc.min, AggFunc.max, AggFunc.sum]:
+    def aggregate_field(
+        activity_list: List[Activity], field_decr: ActivityField, field_name: str
+    ) -> Optional[Union[int, float, str]]:
+        """Aggregate field_name according to field_descr."""
+        if field_decr.aggregate in [AggFunc.MIN, AggFunc.MAX, AggFunc.SUM]:
             return field_decr.aggregate.value(  # type: ignore
                 getattr(activity, field_name) or 0 for activity in activity_list
             )
-        elif field_decr.aggregate == AggFunc.first:
-            return getattr(activity_list[0], field_name)
-        elif field_decr.aggregate == AggFunc.average:
+        if field_decr.aggregate == AggFunc.FIRST:
+            return getattr(activity_list[0], field_name)  # type: ignore
+        if field_decr.aggregate == AggFunc.AVERAGE:
             num = sum(1 for activity in activity_list if getattr(activity, field_name))
             if num:
-                return (
-                        sum(
-                            getattr(activity, field_name)
-                            for activity in activity_list
-                            if getattr(activity, field_name)
-                        )
-                        / num
+                return (  # type: ignore
+                    sum(
+                        getattr(activity, field_name)
+                        for activity in activity_list
+                        if getattr(activity, field_name)
+                    )
+                    / num
                 )
-            else:
-                return None
+        return None
 
 
 class GarminDaily:  # pylint: disable=too-few-public-methods
