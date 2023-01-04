@@ -344,5 +344,5 @@ def localized_csv_raw(row: List[Optional[Union[str, int, float]]]) -> List[str]:
     return [f"{val:n}" if isinstance(val, float) else str(val) for val in row]
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()
