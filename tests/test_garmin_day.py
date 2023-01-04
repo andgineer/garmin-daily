@@ -1,6 +1,8 @@
-from unittest.mock import MagicMock
-from garmin_daily import GarminDay, Activity
+from unittest.mock import MagicMock, patch
+from garmin_daily import GarminDay, Activity, ActivityField, AggFunc, GarminDaily
+import garminconnect
 from datetime import date
+import os
 
 
 def test_get_hr():
@@ -116,4 +118,66 @@ def test_get_sleep(garmin_sleep_data):
     assert garmin_day.get_sleep() == (None, None, None, None)
 
 
-# todo test real speed aggregation - looks like its just from first record
+def test_activity_field_aggregate_field():
+    # Test sum aggregation function
+    field_descr = ActivityField(garmin_field=None, aggregate=AggFunc.sum)
+    activity_list = [
+        Activity(distance=1, activity_type='', location_name='', duration=None),
+        Activity(distance=2, activity_type='', location_name='', duration=None),
+        Activity(distance=3, activity_type='', location_name='', duration=None),
+    ]
+    assert GarminDay.aggregate_field(activity_list, field_descr, "distance") == 6
+
+    # Test min aggregation function
+    field_descr = ActivityField(garmin_field=None, aggregate=AggFunc.min)
+    activity_list = [
+        Activity(elevation_gain=10, activity_type='', location_name='', duration=None),
+        Activity(elevation_gain=5, activity_type='', location_name='', duration=None),
+        Activity(elevation_gain=20, activity_type='', location_name='', duration=None),
+    ]
+    assert GarminDay.aggregate_field(activity_list, field_descr, "elevation_gain") == 5
+
+    # Test max aggregation function
+    field_descr = ActivityField(garmin_field=None, aggregate=AggFunc.max)
+    activity_list = [
+        Activity(elevation_gain=10, activity_type='', location_name='', duration=None),
+        Activity(elevation_gain=5, activity_type='', location_name='', duration=None),
+        Activity(elevation_gain=20, activity_type='', location_name='', duration=None),
+    ]
+    assert GarminDay.aggregate_field(activity_list, field_descr, "elevation_gain") == 20
+
+    # Test first aggregation function
+    field_descr = ActivityField(garmin_field=None, aggregate=AggFunc.first)
+    activity_list = [
+        Activity(location_name="Run", activity_type='', duration=None),
+        Activity(location_name="Bike", activity_type='', duration=None),
+        Activity(location_name="Swim", activity_type='', duration=None),
+    ]
+    assert GarminDay.aggregate_field(activity_list, field_descr, "location_name") == "Run"
+
+    # Test average aggregation function
+    field_descr = ActivityField(garmin_field=None, aggregate=AggFunc.average)
+    activity_list = [
+        Activity(distance=1, activity_type='', location_name='', duration=None),
+        Activity(distance=2, activity_type='', location_name='', duration=None),
+        Activity(distance=3, activity_type='', location_name='', duration=None),
+    ]
+    assert GarminDay.aggregate_field(activity_list, field_descr, "distance") == 2.0
+
+    # Test average aggregation function with no values for field
+    field_descr = ActivityField(garmin_field=None, aggregate=AggFunc.average)
+    activity_list = [
+        Activity(distance=None, activity_type='', location_name='', duration=None),
+        Activity(distance=None, activity_type='', location_name='', duration=None),
+        Activity(distance=None, activity_type='', location_name='', duration=None)
+    ]
+    assert GarminDay.aggregate_field(activity_list, field_descr, "distance") is None
+
+
+def test_garmin_day_init():
+    with patch.dict(os.environ, {"GARMIN_EMAIL": "fake-email", "GARMIN_PASSWORD": "fake-password"}), patch(
+        "garmin_daily.garmin_aggregations.Garmin"
+    ) as garmin_mock:
+        garmin_day = GarminDaily()
+        garmin_mock.assert_called_with('fake-email', 'fake-password')
+        garmin_day.api.session.mount.assert_called()

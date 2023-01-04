@@ -6,4 +6,5 @@ from garmin_daily.garmin_aggregations import (
     ActivityField,
     GarminDaily,
     GarminDay,
+    AggFunc,
 )

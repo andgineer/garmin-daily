@@ -316,25 +316,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             for field in get_type_hints(Activity, include_extras=True)
         }
         for field_name, field_decr in descr.items():
-            if field_decr.aggregate in [AggFunc.min, AggFunc.max, AggFunc.sum]:
-                fields[field_name] = field_decr.aggregate.value(  # type: ignore
-                    getattr(activity, field_name) or 0 for activity in activity_list
-                )
-            elif field_decr.aggregate == AggFunc.first:
-                fields[field_name] = getattr(activity_list[0], field_name)
-            elif field_decr.aggregate == AggFunc.average:
-                num = sum(1 for activity in activity_list if getattr(activity, field_name))
-                if num:
-                    fields[field_name] = (
-                        sum(
-                            getattr(activity, field_name)
-                            for activity in activity_list
-                            if getattr(activity, field_name)
-                        )
-                        / num
-                    )
-                else:
-                    fields[field_name] = None
+            fields[field_name] = GarminDay.aggregate_field(activity_list, field_decr, field_name)
         fields["sport"] = activity_name.split(SPORT_UNIQUENESS)[0]  # just sport name without start time
         activity = Activity(**fields)
         activity.comment = (
@@ -351,6 +333,31 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         if not activity.steps:
             activity.steps = activity.estimate_steps()
         return activity
+
+    @staticmethod
+    def aggregate_field(activity_list: List[Activity], field_decr: ActivityField, field_name: str) -> Optional[Union[int, float, str]]:
+        """Aggregate field_name according to field_descr.
+
+        """
+        if field_decr.aggregate in [AggFunc.min, AggFunc.max, AggFunc.sum]:
+            return field_decr.aggregate.value(  # type: ignore
+                getattr(activity, field_name) or 0 for activity in activity_list
+            )
+        elif field_decr.aggregate == AggFunc.first:
+            return getattr(activity_list[0], field_name)
+        elif field_decr.aggregate == AggFunc.average:
+            num = sum(1 for activity in activity_list if getattr(activity, field_name))
+            if num:
+                return (
+                        sum(
+                            getattr(activity, field_name)
+                            for activity in activity_list
+                            if getattr(activity, field_name)
+                        )
+                        / num
+                )
+            else:
+                return None
 
 
 class GarminDaily:  # pylint: disable=too-few-public-methods
@@ -369,10 +376,10 @@ class GarminDaily:  # pylint: disable=too-few-public-methods
         )
         self.api.session.mount("https://", HTTPAdapter(max_retries=retries))
 
-    def login(self) -> None:
+    def login(self) -> None:  # pragma: no cover
         """Login."""
         self.api.login()
 
-    def __getitem__(self, day: date) -> GarminDay:
+    def __getitem__(self, day: date) -> GarminDay:  # pragma: no cover
         """Get aggregated day."""
         return GarminDay(self.api, day)
