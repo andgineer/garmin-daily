@@ -4,7 +4,7 @@ from garmin_daily.garmin_aggregations import (
     WALKING_SPORT,
     Activity,
     ActivityField,
+    AggFunc,
     GarminDaily,
     GarminDay,
-    AggFunc,
 )
