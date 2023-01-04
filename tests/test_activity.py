@@ -21,4 +21,3 @@ def test_activity_estimate_steps(garmin_activity_marked):
     activity = Activity.init_from_garmin_activity(garmin_activity_marked[0])
     activity.sport = garmin_activity_marked[1]["sport"]
     assert activity.estimate_steps() == garmin_activity_marked[1]["estimated_steps"]
-
