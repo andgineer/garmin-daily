@@ -19,6 +19,7 @@ MAX_LOGIN_RETRY = 5
 
 WALKING_SPORT = "Walking"
 WALKING_LOCATION = "Novi Sad"
+SPORT_UNIQUENESS = "\t"  # symbol to add to sport session name uniqueness so this session won't aggregate
 
 SPORT_STEP_LENGTH_KM = {
     "Roller skiing": 0.0015,
@@ -108,13 +109,9 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
                 field_path = snake_to_camel(field_name)
             if ACTIVITY_PATH_DELIMITER in field_path:
                 # process one level only for simplicity
-                field_path_1 = field_path.split(ACTIVITY_PATH_DELIMITER)[0]
-                if isinstance(garmin_activity[field_path_1], str):
-                    val = garmin_activity[field_path_1]
-                else:
-                    val = garmin_activity[field_path_1][
-                        field_path.split(ACTIVITY_PATH_DELIMITER)[1]
-                    ]
+                val = garmin_activity[field_path.split(ACTIVITY_PATH_DELIMITER)[0]][
+                    field_path.split(ACTIVITY_PATH_DELIMITER)[1]
+                ]
             else:
                 val = garmin_activity.get(field_path)
             fields[field_name] = val
@@ -139,7 +136,7 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
 
     def __repr__(self) -> str:
         """Show object."""
-        return f"<{self.__class__.__name__} {self.__dict__.items()}>"
+        return f"<{self.__class__.__name__}({', '.join(f'{key}={val}' for key, val in self.__dict__.items())}>"
 
 
 class GarminDay:  # pylint: disable=too-few-public-methods
@@ -149,10 +146,6 @@ class GarminDay:  # pylint: disable=too-few-public-methods
     hr_min: Optional[float] = None
     hr_average: Optional[float] = None
     hr_rest: float = float()
-    sleep_time: Optional[float] = None
-    sleep_deep_time: Optional[float] = None
-    sleep_light_time: Optional[float] = None
-    sleep_rem_time: Optional[float] = None
 
     def __init__(self, api: Garmin, day: date) -> None:
         """Set useful Garmin day fields as attributes."""
@@ -161,7 +154,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         self.date_str = self.date.isoformat().split("T")[0]
         self.total_steps = self.get_steps()
         self.get_hr()
-        self.get_sleep()
+        self.sleep_time, self.sleep_deep_time, self.sleep_light_time, self.sleep_rem_time = self.get_sleep()
         self.vo2max = self.get_vo2max()
         self.activities = self.aggregate_activities()
 
@@ -185,14 +178,16 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         else:
             self.hr_average = None
 
-    def get_sleep(self) -> None:
+    def get_sleep(self) -> Tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
         """Set sleep attrs."""
         sleep_data = self.api.get_sleep_data(self.date_str)
-        if sleep_data["dailySleepDTO"]["sleepTimeSeconds"] is not None:
-            self.sleep_time = sleep_data["dailySleepDTO"]["sleepTimeSeconds"] // 60 / 60
-            self.sleep_deep_time = sleep_data["dailySleepDTO"]["deepSleepSeconds"] // 60 / 60
-            self.sleep_light_time = sleep_data["dailySleepDTO"]["lightSleepSeconds"] // 60 / 60
-            self.sleep_rem_time = sleep_data["dailySleepDTO"]["remSleepSeconds"] // 60 / 60
+        if sleep_data["dailySleepDTO"]["sleepTimeSeconds"] is None:
+            return None, None, None, None
+        sleep_time = sleep_data["dailySleepDTO"]["sleepTimeSeconds"] // 60 / 60
+        sleep_deep_time = sleep_data["dailySleepDTO"]["deepSleepSeconds"] // 60 / 60
+        sleep_light_time = sleep_data["dailySleepDTO"]["lightSleepSeconds"] // 60 / 60
+        sleep_rem_time = sleep_data["dailySleepDTO"]["remSleepSeconds"] // 60 / 60
+        return sleep_time, sleep_deep_time, sleep_light_time, sleep_rem_time
 
     def detect_sport(self, activity: Activity) -> Tuple[str, bool]:
         """Detect sport.
@@ -205,7 +200,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
         if activity.activity_type in SPORT_DETECTION:  # pylint: disable=no-member
             separate = (
                 activity.distance
-                and isinstance(activity.distance, int)
+                and isinstance(activity.distance, (int, float))
                 and activity.distance > 8000
                 and activity.activity_type == "cycling"
             )
@@ -233,17 +228,17 @@ class GarminDay:  # pylint: disable=too-few-public-methods
             activity = Activity.init_from_garmin_activity(garmin_activity)
             sport, separate = self.detect_sport(activity)
             if separate:  # do not aggregate
-                sport = f"{sport} {activity.start_time}"
+                sport = f"{sport}{SPORT_UNIQUENESS}{activity.start_time}"
             if isinstance(sport, dict):
                 for key, val in sport.items():
                     if isinstance(val, list):
                         for interval in val:
                             if (
                                 interval["from"]
-                                <= datetime.strptime(
+                                >= datetime.strptime(
                                     activity.start_time, "%Y-%m-%d %H:%M:%S"
                                 ).date()
-                                >= interval["to"]
+                                <= interval["to"]
                             ):
                                 sport = key
                                 break
@@ -340,7 +335,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods
                     )
                 else:
                     fields[field_name] = None
-        fields["sport"] = activity_name.split(" ")[0]  # just sport name without start time
+        fields["sport"] = activity_name.split(SPORT_UNIQUENESS)[0]  # just sport name without start time
         activity = Activity(**fields)
         activity.comment = (
             GarminDay.dump_attrs(
