@@ -138,18 +138,23 @@ def main(  # pylint: disable=too-many-arguments
 
     start_date, days_to_add = detect_days_to_add(fitness, columns)
     if days_to_add > DAY_TO_ADD_WITHOUT_FORCE and not force:
-        print("\nToo many days to add.\nUse --force to confirm.")
+        print(f"\nToo many days to add ({days_to_add}).\nUse --force to confirm.")
         sys.exit(1)
 
-    add_rows_from_garmin(
-        fitness=fitness,
-        columns=columns,
-        start_date=start_date,
-        days_to_add=days_to_add,
-        gym_days=[PCWeekdays.index(weekday) for weekday in gym_weekdays],
-        gym_duration=gym_duration,
-        gym_location=gym_location,
-    )
+    if days_to_add:
+        add_rows_from_garmin(
+            fitness=fitness,
+            columns=columns,
+            start_date=start_date,
+            days_to_add=days_to_add,
+            gym_days=[PCWeekdays.index(weekday) for weekday in gym_weekdays],
+            gym_duration=gym_duration,
+            gym_location=gym_location,
+        )
+    else:
+        print(
+            f"Last filled day {start_date}. Nothing to add. Add only full days - up to yesterday."
+        )
 
 
 def add_rows_from_garmin(  # pylint: disable=too-many-arguments
@@ -271,6 +276,7 @@ def detect_days_to_add(fitness: gspread.Worksheet, columns: Dict[str, str]) -> T
     print("Last filled date", last_date)
     start_date = last_date + timedelta(days=1)
     days_to_add = (datetime.now().date() - start_date).days
+    days_to_add = max(days_to_add, 0)
     print("Days to fill", days_to_add)
     return start_date, days_to_add
 
