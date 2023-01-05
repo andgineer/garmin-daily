@@ -146,18 +146,13 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
 class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-attributes
     """Aggregate one day Garmin data."""
 
-    hr_max: Optional[float] = None
-    hr_min: Optional[float] = None
-    hr_average: Optional[float] = None
-    hr_rest: float = float()
-
     def __init__(self, api: Garmin, day: date) -> None:
         """Set useful Garmin day fields as attributes."""
         self.api = api
         self.date = day
         self.date_str = self.date.isoformat().split("T")[0]
         self.total_steps = self.get_steps()
-        self.get_hr()
+        self.hr_min, self.hr_max, self.hr_average, self.hr_rest = self.get_hr()
         (
             self.sleep_time,
             self.sleep_deep_time,
@@ -173,22 +168,29 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
             "generic"
         ]["vo2MaxValue"]
 
-    def get_hr(self) -> None:
-        """Set HR attrs."""
+    def get_hr(self) -> Tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
+        """Set HR attrs.
+
+        Returns (min, max, average, rest)
+        """
         hr_data = self.api.get_heart_rates(self.date_str)
-        self.hr_max = hr_data["maxHeartRate"]
-        self.hr_min = hr_data["minHeartRate"]
-        self.hr_rest = hr_data["restingHeartRate"]
+        hr_max = hr_data["maxHeartRate"]
+        hr_min = hr_data["minHeartRate"]
+        hr_rest = hr_data["restingHeartRate"]
         if hr_data["heartRateValues"] is not None:
             # hr[0] Unix time in ms, datetime.utcfromtimestamp(hr[0] / 1000)
             hr_sum = sum(hr[1] for hr in hr_data["heartRateValues"] if hr[1])
             hr_count = sum(1 for hr in hr_data["heartRateValues"] if hr[1])
-            self.hr_average = hr_sum / hr_count if hr_count else None
+            hr_average = hr_sum / hr_count if hr_count else None
         else:
-            self.hr_average = None
+            hr_average = None
+        return hr_min, hr_max, hr_average, hr_rest
 
     def get_sleep(self) -> Tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
-        """Set sleep attrs."""
+        """Set sleep attrs.
+
+        Returns (total, deep, light, REM)
+        """
         sleep_data = self.api.get_sleep_data(self.date_str)
         if sleep_data["dailySleepDTO"]["sleepTimeSeconds"] is None:
             return None, None, None, None
