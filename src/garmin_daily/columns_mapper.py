@@ -80,7 +80,9 @@ class ColumnsMapper:
 
         Unknown columns are filled with empty strings.
         """
-        return [fields.get(column, "") if column else "" for column in self.row_columns]
+        return [
+            fields.get(column, "") if column is not None else "" for column in self.row_columns
+        ]
 
     def __getitem__(self, column: Enum) -> str:
         """Spreadsheet reference for the column."""
