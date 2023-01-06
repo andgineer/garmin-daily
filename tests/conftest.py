@@ -4,6 +4,8 @@ from pathlib import Path
 
 import pytest
 
+from garmin_daily.columns_mapper import GarminCol
+
 
 def _get_repo_root_dir() -> str:
     """
@@ -15,7 +17,6 @@ def _get_repo_root_dir() -> str:
 
 ROOT_DIR = _get_repo_root_dir()
 RESOURCES = pathlib.Path(f"{ROOT_DIR}/tests/resources")
-
 
 garmin_ativities_marked_data = [
     {
@@ -85,3 +86,48 @@ def garmin_sleep_data():
     with (RESOURCES / "sleep.json").open("r", encoding="utf8") as f:
         result = json.loads(f.read())
     return result
+
+
+@pytest.fixture(
+    scope="module",
+    params=[
+        (
+            [
+                "Location",
+                "Sport",
+                "Duration",
+                "Date",
+                "Distance",
+                "Steps",
+                "Comment",
+                "Week",
+                "Hours",
+                "Week Day",
+                "HR rest",
+                "Sleep time",
+                "VO2 max",
+            ],
+            {
+                "idx": {GarminCol.DATE: 3, GarminCol.STEPS: 5, GarminCol.DISTANCE: 4},
+                "row_columns": [
+                    GarminCol.LOCATION,
+                    GarminCol.SPORT,
+                    GarminCol.DURATION,
+                    GarminCol.DATE,
+                    GarminCol.DISTANCE,
+                    GarminCol.STEPS,
+                    GarminCol.COMMENT,
+                    GarminCol.WEEK,
+                    GarminCol.HOURS,
+                    GarminCol.WEEKDAY,
+                    GarminCol.HR_REST,
+                    GarminCol.SLEEP_TIME,
+                    GarminCol.VO2_MAX,
+                ],
+                "row": ["", "", "-duration-", "-date-", "", "", "", "", "", "", "", "", ""],
+            },
+        ),
+    ],
+)
+def header_row(request):
+    return request.param
