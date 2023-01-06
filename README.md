@@ -11,6 +11,13 @@
 
 We use `Annotated` so at least Python 3.9
 
+#### pre-commit
+
+Do not forget to install, so static check github action won't fail on your commits
+
+    pip install pre-commit
+    pre-commit install  # in the project folder
+
 #### Create / activate environment
     . ./activate.sh
 
@@ -31,3 +38,8 @@ Using pip-tools
     make ver-bug/feature/release
 
 Github actin will automatically update the pip package on pypi.org
+
+#### Docs
+
+Github pages https://andgineer.github.io/garmin-daily/ are auto created from markdown files
+in `docs/`.
