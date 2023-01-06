@@ -2,6 +2,8 @@
 
 Fill Google Sheets with fitness data from Garmin Connect.
 
+![garmin-daily.png](garmin-daily.png)
+
 ## Installation
 
     pip install garmin-daily
@@ -40,17 +42,15 @@ Expected columns:
 
 First row should be with the columns' titles.
 
-Application look for column with date using the title "Date".
-But for the moment application ignores title row when creates fitnes data rows
-https://github.com/andgineer/garmin-daily/issues/2.
+You can add another column titles in the mapping [COLUMNS_MAP](docstrings/columns_mapper/)
 
 ## garmin-daily command line interface
 
-To add rows to Google Sheet from Garmin Connect, use
+To add rows to Google Sheet from Garmin Connect, use `garmin-daily`, get help with
 
     garmin-daily --help
 
-At minimum you specify Google Sheet name and that's all
+At minimum, you specify Google Sheet name and that's all
 
     garmin-daily --sheet "My Fitness"
 
@@ -68,23 +68,17 @@ and specify your gym location and usual training duration:
         --gym-location "Cool place"
 
 If for some reason you use in the Google Sheet locale different from
-the one on your PC.
-For example on your PC it is `USA` locale with digital point separator "."
-but in the Google Sheet it's `Russia` with separator ",".
-
-In such case you can specify Google Sheet locale in the CLI -
-sorry no automation here for the moment
-https://github.com/andgineer/garmin-daily/issues/1.
+the one on your PC you pass it to the app:
 
     garmin-daily --sheet "My Fitness" \
         --sheet-locale "ru_RU"
 
-# Docstrings documentation
+For example if on your PC it is `USA` locale with digital point separator "."
+but in the Google Sheet it's `Russia` with separator ",".
 
-Documentation generated from source code.
+Sorry no automation here for the moment
+https://github.com/andgineer/garmin-daily/issues/1.
 
-[reference](docstrings/)
-
-# source code
+# GitHUB
 
 [sorokin.engineer/aios3](https://github.com/andgineer/garmin-daily)

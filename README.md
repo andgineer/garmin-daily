@@ -1,9 +1,11 @@
 [![Build Status](https://github.com/andgineer/garmin-daily/workflows/ci/badge.svg)](https://github.com/andgineer/garmin-daily/actions)
 # Fill Google Sheets with data from Garmin Connect
 
+![garmin-daily.png](docs%2Fgarmin-daily.png)
+
 # Documentation
 
-[garmin-daily](https://andgineer.github.io/garmin-daily/)
+Detailed user manual [garmin-daily](https://andgineer.github.io/garmin-daily/)
 
 # Developers
 
@@ -23,9 +25,9 @@ Do not forget to install, so static check github action won't fail on your commi
 
 Delete `venv/` if you want to reinstall everything from requirements*.txt
 
+    make reqs  # if you want to refresh dependencies
     deactivate
     rm -f venv
-    make reqs  # if you want to refresh versions
     pip install --upgrade pip-tools
     . ./activate.sh
 
@@ -43,3 +45,9 @@ Github actin will automatically update the pip package on pypi.org
 
 Github pages https://andgineer.github.io/garmin-daily/ are auto created from markdown files
 in `docs/`.
+
+# Autodocs
+
+Documentation generated from docstrings in sources:
+
+[reference](docstrings/)
