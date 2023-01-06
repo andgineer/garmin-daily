@@ -83,7 +83,7 @@ def week_num(day: date) -> int:
     "--gym-location",
     "-l",
     "gym_location",
-    default="The classic Bulevar Oslodođenja",
+    default="The classic Bulevar Oslobođenja",
     show_default=True,
     help="Gym training duration, minutes.",
     nargs=1,
