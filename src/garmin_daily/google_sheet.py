@@ -262,11 +262,12 @@ def detect_days_to_add(fitness: gspread.Worksheet, columns: ColumnsMapper) -> Tu
     Returns (start_date, days_to_add)
     """
     sheet_name = fitness.spreadsheet.title
-    date_cell = fitness.acell(columns[GarminCol.DATE] + "2").value
+    first_data_row = 2  # after header row #1
+    date_cell = fitness.acell(f"{columns[GarminCol.DATE]}{first_data_row}").value
     if not date_cell:
         print(
             f"\nCannot find last filled date in Google Sheet '{sheet_name}'.'{fitness.title}'"
-            f", cell {columns[GarminCol.DATE]}2"
+            f", cell {columns[GarminCol.DATE]}{first_data_row}"
         )
         sys.exit(1)
     try:
@@ -274,7 +275,7 @@ def detect_days_to_add(fitness: gspread.Worksheet, columns: ColumnsMapper) -> Tu
     except ValueError as exc:
         print(
             f"\nWrong date string in Google Sheet '{sheet_name}'.'{fitness.title}', "
-            f"cell {columns[GarminCol.DATE]}2:\n{exc}"
+            f"cell {columns[GarminCol.DATE]}{first_data_row}:\n{exc}"
         )
         sys.exit(1)
     print("Last filled date", last_date)
@@ -288,7 +289,7 @@ def detect_days_to_add(fitness: gspread.Worksheet, columns: ColumnsMapper) -> Tu
 def open_google_sheet(sheet: str, locale_string: str) -> Tuple[gspread.Worksheet, ColumnsMapper]:
     """Open Google Sheet.
 
-    Return worksheet and columns map (title: id)
+    Return worksheet and columns map
     """
     gspread_client = gspread.service_account()
     try:
