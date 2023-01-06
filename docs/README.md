@@ -81,4 +81,4 @@ https://github.com/andgineer/garmin-daily/issues/1.
 
 # GitHUB
 
-[sorokin.engineer/aios3](https://github.com/andgineer/garmin-daily)
+[sorokin.engineer/garmin-daily](https://github.com/andgineer/garmin-daily)
