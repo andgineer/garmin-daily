@@ -14,3 +14,4 @@ black
 
 types-requests
 pytest-cov
+coveralls

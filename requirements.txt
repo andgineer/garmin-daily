@@ -14,9 +14,9 @@ charset-normalizer==2.1.1
     # via requests
 click==8.1.3
     # via -r requirements.in
-cloudscraper==1.2.66
+cloudscraper==1.2.67
     # via garminconnect
-garminconnect==0.1.49
+garminconnect==0.1.50
     # via -r requirements.in
 google-auth==2.15.0
     # via
