@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/andgineer/garmin-daily/workflows/ci/badge.svg)](https://github.com/andgineer/garmin-daily/actions)
+[![Build Status](https://github.com/andgineer/garmin-daily/workflows/Test/badge.svg)](https://github.com/andgineer/garmin-daily/actions)
 [![Coverage Status](https://coveralls.io/repos/github/andgineer/garmin-daily/badge.svg)](https://coveralls.io/github/andgineer/garmin-daily)
 # Fill Google Sheets with data from Garmin Connect
 
