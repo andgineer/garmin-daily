@@ -112,7 +112,7 @@ def week_num(day: date) -> int:
     "version",
     is_flag=True,
     default=False,
-    help="Show garmin-daily version.",
+    help="Show version.",
     nargs=1,
 )
 def main(  # pylint: disable=too-many-arguments
@@ -129,7 +129,7 @@ def main(  # pylint: disable=too-many-arguments
     Documentation https://andgineer.github.io/garmin-daily/
     """
     if version:
-        print(f"garmin-daily {VERSION}")
+        print(f"{VERSION}")
         sys.exit(0)
 
     print(f"garmin-daily {VERSION} is going to add Garmin activities to Google Sheet '{sheet}'")
