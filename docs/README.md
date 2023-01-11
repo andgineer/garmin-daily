@@ -67,18 +67,6 @@ and specify your gym location and usual training duration:
         --gym-duration 30 \
         --gym-location "Cool place"
 
-If for some reason you use in the Google Sheet locale different from
-the one on your PC you pass it to the app:
-
-    garmin-daily --sheet "My Fitness" \
-        --sheet-locale "ru_RU"
-
-For example if on your PC it is `USA` locale with digital point separator "."
-but in the Google Sheet it's `Russia` with separator ",".
-
-Sorry no automation here for the moment
-https://github.com/andgineer/garmin-daily/issues/1.
-
 # GitHUB
 
 [sorokin.engineer/garmin-daily](https://github.com/andgineer/garmin-daily)

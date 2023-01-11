@@ -88,15 +88,6 @@ def week_num(day: date) -> int:
     help="Gym training duration, minutes.",
     nargs=1,
 )
-@click.option(  # todo get from Google Sheet https://github.com/andgineer/garmin-daily/issues/1
-    "--sheet-locale",
-    "-l",
-    "sheet_locale",
-    default="ru_RU",
-    show_default=True,
-    help="Google Sheet locale for numbers formatting.",
-    nargs=1,
-)
 @click.option(
     "--force",
     "-f",
@@ -117,7 +108,6 @@ def week_num(day: date) -> int:
 )
 def main(  # pylint: disable=too-many-arguments
     sheet: str,
-    sheet_locale: str,
     gym_weekdays: str,
     gym_duration: int,
     gym_location: str,
@@ -135,7 +125,7 @@ def main(  # pylint: disable=too-many-arguments
     print(f"garmin-daily {VERSION} is going to add Garmin activities to Google Sheet '{sheet}'")
     print(f"Auto create '{gym_location}' gym {gym_duration} minutes training on {gym_weekdays}")
 
-    fitness, columns = open_google_sheet(sheet, sheet_locale)
+    fitness, columns = open_google_sheet(sheet)
 
     start_date, days_to_add = detect_days_to_add(fitness, columns)
     if days_to_add > DAY_TO_ADD_WITHOUT_FORCE and not force:
@@ -286,18 +276,24 @@ def detect_days_to_add(fitness: gspread.Worksheet, columns: ColumnsMapper) -> Tu
     return start_date, days_to_add
 
 
-def open_google_sheet(sheet: str, locale_string: str) -> Tuple[gspread.Worksheet, ColumnsMapper]:
+def open_google_sheet(sheet: str) -> Tuple[gspread.Worksheet, ColumnsMapper]:
     """Open Google Sheet.
 
-    Return worksheet and columns map
+    Return worksheet and columns map.
+    Also set current locale from the spreadsheet so it will affect %n formatting.
     """
     gspread_client = gspread.service_account()
     try:
-        worksheet = gspread_client.open(sheet).sheet1
+        spreadsheet = gspread_client.open(sheet)
+        worksheet = spreadsheet.sheet1
     except gspread.exceptions.SpreadsheetNotFound:
         print(f"\nGoogle sheet '{sheet}' not found.")
         sys.exit(1)
-    locale.setlocale(locale.LC_NUMERIC, locale_string)
+    spreadsheet_locale = spreadsheet.locale
+    try:
+        locale.setlocale(locale.LC_NUMERIC, spreadsheet_locale)
+    except Exception as exc:  # pylint: disable=broad-except
+        print(f"Error using the spreadsheet locale '{spreadsheet_locale}':\n{exc}")
     mapper = ColumnsMapper(worksheet.get("A1:M1")[0])
     return worksheet, mapper
 
