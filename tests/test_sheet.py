@@ -1,11 +1,11 @@
 from datetime import date, datetime, timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from garmin_daily import Activity
 from garmin_daily.columns_mapper import ColumnsMapper, GarminCol
-from garmin_daily.google_sheet import create_day_rows, detect_days_to_add
+from garmin_daily.google_sheet import create_day_rows, detect_days_to_add, open_google_sheet
 
 
 def test_detect_days_to_add_no_date(header_row):
@@ -150,3 +150,24 @@ def test_create_day_rows(header_row):
             GarminCol.VO2_MAX: "",
         },
     ]
+
+
+def test_open_google_sheet():
+    sheet_name = "-fake-"
+    header_row = ("fake1,fake2",)
+    with patch("garmin_daily.google_sheet.gspread") as mock_gspread, patch(
+        "garmin_daily.google_sheet.locale"
+    ) as mock_locale, patch("garmin_daily.google_sheet.ColumnsMapper") as mock_mapper:
+        mock_session = MagicMock()
+        mock_spreadsheet = MagicMock()
+        mock_worksheet = MagicMock()
+        mock_worksheet.get = MagicMock(return_value=header_row)
+        mock_gspread.service_account = MagicMock(return_value=mock_session)
+        mock_session.open = MagicMock(return_value=mock_spreadsheet)
+        mock_spreadsheet.sheet1 = mock_worksheet
+        open_google_sheet(sheet_name)
+
+    mock_gspread.service_account.assert_called()
+    mock_session.open.assert_called_with(sheet_name)
+    mock_locale.setlocale.assert_called_with(mock_locale.LC_NUMERIC, mock_spreadsheet.locale)
+    mock_mapper.assert_called_with(header_row[0])
