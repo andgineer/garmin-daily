@@ -27,7 +27,7 @@ class Weekdays(IntEnum):
 PCWeekdays = [date(2001, 1, i).strftime("%a") for i in range(1, 8)]
 
 BATCH_SIZE = 7  # Add days by batches to prevent block grom Garmin API
-API_DELAY = 15  # seconds to wait between batches
+API_DELAY = 15  # seconds to wait between batches to prevent robot protection from Garmin API
 DAY_TO_ADD_WITHOUT_FORCE = 7  # proof against unknown bugs. to add more days use --force
 
 
@@ -148,7 +148,7 @@ def main(  # pylint: disable=too-many-arguments
         )
 
 
-def add_rows_from_garmin(  # pylint: disable=too-many-arguments
+def add_rows_from_garmin(  # pylint: disable=too-many-arguments, too-many-locals
     fitness: gspread.Worksheet,
     columns: ColumnsMapper,
     start_date: date,
@@ -165,9 +165,10 @@ def add_rows_from_garmin(  # pylint: disable=too-many-arguments
     if days_to_add % BATCH_SIZE:
         batches_num += 1
     for batch in range(batches_num):
-        for day_num in range(BATCH_SIZE):
-            day = start_date + timedelta(days=batch * BATCH_SIZE + day_num)
-            if day >= datetime.now().date():
+        for day_in_batch in range(BATCH_SIZE):
+            day_num = batch * BATCH_SIZE + day_in_batch
+            day = start_date + timedelta(days=day_num)
+            if day >= datetime.now().date() or day_num >= days_to_add:
                 break
             rows_fields = create_day_rows(
                 daily=daily,
@@ -183,7 +184,8 @@ def add_rows_from_garmin(  # pylint: disable=too-many-arguments
             for row in rows:
                 print("; ".join(row))
             fitness.insert_rows(rows, row=2, value_input_option="USER_ENTERED")
-        time.sleep(API_DELAY)
+        if batch < batches_num - 1:  # do not pause on last iteration
+            time.sleep(API_DELAY)  # pause to prevent robot protection from Garmin API
 
 
 @lru_cache(maxsize=None)

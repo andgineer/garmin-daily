@@ -11,7 +11,7 @@ twine
 pre-commit
 pip-tools
 black
-
 types-requests
 pytest-cov
 coveralls
+freezegun

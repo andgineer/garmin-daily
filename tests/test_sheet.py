@@ -2,10 +2,17 @@ from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
 import pytest
+from freezegun import freeze_time
 
 from garmin_daily import Activity
 from garmin_daily.columns_mapper import ColumnsMapper, GarminCol
-from garmin_daily.google_sheet import create_day_rows, detect_days_to_add, open_google_sheet
+from garmin_daily.google_sheet import (
+    BATCH_SIZE,
+    add_rows_from_garmin,
+    create_day_rows,
+    detect_days_to_add,
+    open_google_sheet,
+)
 
 
 def test_detect_days_to_add_no_date(header_row):
@@ -34,12 +41,17 @@ def test_detect_days_to_add_all_filled(header_row):
 
 
 def test_detect_days_to_add(header_row):
-    today = (datetime.now() - timedelta(days=2)).strftime("%Y-%m-%d")
+    days_ago_last_filled = 5
+    days_to_fill = days_ago_last_filled - 1  # we do not fill today because it's non-complete day
+    last_filled_date_str = (datetime.now() - timedelta(days=days_ago_last_filled)).strftime(
+        "%Y-%m-%d"
+    )
+    first_date_to_fill = (datetime.now() - timedelta(days=days_to_fill)).date()
     sheet_mock = MagicMock()
-    sheet_mock.acell = lambda x: type("CellMock", (object,), {"value": today})()
+    sheet_mock.acell = lambda x: type("CellMock", (object,), {"value": last_filled_date_str})()
     start, length = detect_days_to_add(sheet_mock, ColumnsMapper(header_row[0]))
-    assert start == (datetime.now() - timedelta(days=1)).date()
-    assert length == 1
+    assert start == first_date_to_fill
+    assert length == days_to_fill
 
 
 def test_create_day_rows(header_row):
@@ -171,3 +183,59 @@ def test_open_google_sheet():
     mock_session.open.assert_called_with(sheet_name)
     mock_locale.setlocale.assert_called_with(mock_locale.LC_NUMERIC, mock_spreadsheet.locale)
     mock_mapper.assert_called_with(header_row[0])
+
+
+def test_add_rows_from_garmin():
+    mock_worksheet = MagicMock()
+    mock_mapper = MagicMock()
+    day_of_month = 2  # BATCH_SIZE * 2 + day_of_month should be valid day number
+    start_date = date(2021, 1, day_of_month)
+    days_to_add = 2  # less that BATCH_SIZE
+    date_after_last = date(2021, 1, day_of_month + days_to_add)
+    gym_days = [0, 2]
+    gym_duration = 31
+    gym_location = "-fake-"
+    with patch("garmin_daily.google_sheet.GarminDaily") as mock_garmin_daily, patch(
+        "garmin_daily.google_sheet.create_day_rows"
+    ) as mock_create_day_rows, patch(
+        "garmin_daily.google_sheet.search_missed_steps_in_sheet"
+    ) as mock_search_missed_steps_in_sheet, patch(
+        "garmin_daily.google_sheet.time.sleep"
+    ) as mock_sleep:
+        with freeze_time(date_after_last):
+            add_rows_from_garmin(
+                fitness=mock_worksheet,
+                columns=mock_mapper,
+                start_date=start_date,
+                days_to_add=days_to_add,
+                gym_days=gym_days,
+                gym_duration=gym_duration,
+                gym_location=gym_location,
+            )
+        mock_sleep.assert_not_called()
+        mock_garmin_daily.assert_called_once()
+        assert mock_search_missed_steps_in_sheet.call_count == days_to_add
+        assert mock_create_day_rows.call_count == days_to_add
+
+        mock_sleep.reset_mock()
+        mock_search_missed_steps_in_sheet.reset_mock()
+        mock_garmin_daily.reset_mock()
+        mock_create_day_rows.reset_mock()
+
+        batch_number = 2
+        days_to_add = BATCH_SIZE * batch_number + 1
+        date_after_last = date(2021, 1, day_of_month + days_to_add)
+        with freeze_time(date_after_last):
+            add_rows_from_garmin(
+                fitness=mock_worksheet,
+                columns=mock_mapper,
+                start_date=start_date,
+                days_to_add=days_to_add,
+                gym_days=gym_days,
+                gym_duration=gym_duration,
+                gym_location=gym_location,
+            )
+        assert mock_sleep.call_count == batch_number
+        mock_garmin_daily.assert_called_once()
+        assert mock_search_missed_steps_in_sheet.call_count == days_to_add
+        assert mock_create_day_rows.call_count == days_to_add
