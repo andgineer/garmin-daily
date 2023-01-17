@@ -201,7 +201,9 @@ def test_add_rows_from_garmin():
         "garmin_daily.google_sheet.search_missed_steps_in_sheet"
     ) as mock_search_missed_steps_in_sheet, patch(
         "garmin_daily.google_sheet.time.sleep"
-    ) as mock_sleep:
+    ) as mock_sleep, patch(
+        "garmin_daily.google_sheet.fitness_df"
+    ) as mock_fitness_df:
         with freeze_time(date_after_last):
             add_rows_from_garmin(
                 fitness=mock_worksheet,
@@ -214,6 +216,7 @@ def test_add_rows_from_garmin():
             )
         mock_sleep.assert_not_called()
         mock_garmin_daily.assert_called_once()
+        mock_fitness_df.assert_not_called()
         assert mock_search_missed_steps_in_sheet.call_count == days_to_add
         assert mock_create_day_rows.call_count == days_to_add
 
