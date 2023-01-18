@@ -16,6 +16,8 @@ from garmin_daily import SPORT_STEP_LENGTH_KM, WALKING_SPORT, Activity, GarminDa
 from garmin_daily.columns_mapper import ColumnsMapper, GarminCol
 from garmin_daily.version import VERSION
 
+SHEET_NAME_DEFAULT = "05 Fitness"
+
 
 class Weekdays(IntEnum):
     """Weekdays for datetime.weekday."""
@@ -51,7 +53,7 @@ def week_num(day: date) -> int:
     "--sheet",
     "-s",
     "sheet",
-    default="05 Fitness",
+    default=SHEET_NAME_DEFAULT,
     show_default=True,
     help="Google sheet name to add activities from Garmin.",
     nargs=1,
