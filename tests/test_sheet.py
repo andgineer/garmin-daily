@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
+import pandas as pd
 import pytest
 from freezegun import freeze_time
 
@@ -12,6 +13,7 @@ from garmin_daily.google_sheet import (
     create_day_rows,
     detect_days_to_add,
     open_google_sheet,
+    search_missed_steps_in_sheet,
 )
 
 
@@ -242,3 +244,39 @@ def test_add_rows_from_garmin():
         mock_garmin_daily.assert_called_once()
         assert mock_search_missed_steps_in_sheet.call_count == days_to_add
         assert mock_create_day_rows.call_count == days_to_add
+
+
+def test_search_missed_steps_in_sheet():
+    def mock_idx(column_id):
+        return {
+            GarminCol.DISTANCE: 0,
+            GarminCol.DATE: 1,
+            GarminCol.STEPS: 2,
+        }[column_id]
+
+    fitness = MagicMock()
+    columns = MagicMock()
+    columns.idx = mock_idx
+    # setup test data
+    rows = [["=0*0.0001", "2022-02-16", "=0-400"], ["=0*0.0002", "2022-02-17", "=0-500"]]
+
+    # mock the get_steps function to return a value of 10
+    with patch("garmin_daily.google_sheet.fitness_df") as mock_fitness_df:
+        mock_fitness_df.return_value = pd.DataFrame(
+            [
+                (100, "2022-02-16"),
+                (200, "2022-02-17"),
+            ],
+            columns=["Steps", "Date"],
+        ).set_index("Date", inplace=False)
+        # call the function
+        search_missed_steps_in_sheet(fitness, rows, columns)
+        print(rows)
+
+        # assert that the steps column was updated with the value of 10
+        assert rows[0][columns.idx(GarminCol.STEPS)] == "=100-400"
+        assert rows[1][columns.idx(GarminCol.STEPS)] == "=200-500"
+
+        # assert that the distance column was updated with the value of 10 * 0.0007
+        assert rows[0][columns.idx(GarminCol.DISTANCE)] == "=(100-400)*0.0001"
+        assert rows[1][columns.idx(GarminCol.DISTANCE)] == "=(200-500)*0.0002"
