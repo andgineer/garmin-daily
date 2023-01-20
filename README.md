@@ -1,5 +1,5 @@
 [![Build Status](https://github.com/andgineer/garmin-daily/workflows/Test/badge.svg)](https://github.com/andgineer/garmin-daily/actions)
-[![Coverage Status](https://coveralls.io/repos/github/andgineer/garmin-daily/badge.svg)](https://coveralls.io/github/andgineer/garmin-daily)
+[![Coverage Status](https://coveralls.io/repos/github/andgineer/garmin-daily/badge.svg?branch=main)](https://coveralls.io/github/andgineer/garmin-daily?branch=main)
 # Fill Google Sheets with data from Garmin Connect
 
 ![garmin-daily.png](docs%2Fgarmin-daily.png)
