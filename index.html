@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="description" content="None" /><meta name="author" content="Andrey Sorokin" /><link rel="canonical" href="https://andgineer.github.io/garmin-dayly/" />
+      <link rel="shortcut icon" href="img/favicon.ico" />
+    <title>garmin-dayly</title>
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "garmin-dayly";
+        var mkdocs_page_input_path = "README.md";
+        var mkdocs_page_url = "/garmin-dayly/";
+      </script>
+    
+    <script src="js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="." class="icon icon-home"> garmin-dayly
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="./search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+                <li class="toctree-l1 current"><a class="reference internal current" href=".">garmin-dayly</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#credentials">Credentials</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#garmin-connect">Garmin Connect</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#google-sheets">Google Sheets</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#google-sheet-structure">Google Sheet structure</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#garmin-daily-command-line-interface">garmin-daily command line interface</a>
+    </li>
+    </ul>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API Reference</span></p>
+              <ul>
+                  <li class="toctree-l1"><a class="reference internal" href="docstrings/">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="docstrings/columns_mapper/">Columns mapper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="docstrings/garmin_aggregations/">Garmin aggregations</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="docstrings/google_sheet/">Google sheet</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="docstrings/snake_to_camel/">Snake to camel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="docstrings/version/">Version</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href=".">garmin-dayly</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+      <li>garmin-dayly</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/andgineer/garmin-dayly/edit/master/docs/README.md">Edit on garmin-dayly</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <h1 id="garmin-dayly">garmin-dayly</h1>
+<p>Fill Google Sheets with fitness data from Garmin Connect.</p>
+<p><img alt="garmin-daily.png" src="garmin-daily.png" /></p>
+<h2 id="installation">Installation</h2>
+<pre><code>pip install garmin-daily
+</code></pre>
+<h2 id="credentials">Credentials</h2>
+<h3 id="garmin-connect">Garmin Connect</h3>
+<p>Place login and password into env vars <code>GARMIN_EMAIL</code> and <code>GARMIN_PASSWORD</code> respectfully</p>
+<pre><code>export GARMIN_EMAIL="andrey@sorokin.engineer"
+export GARMIN_PASSWORD='password'
+</code></pre>
+<h3 id="google-sheets">Google Sheets</h3>
+<p>Get Google credentials for Google Sheet as explained in <a href="https://docs.gspread.org/en/latest/oauth2.html#enable-api-access-for-a-project">gspread:Using Service Account</a>
+Place it to <code>~/.config/gspread/service_account.json</code>.</p>
+<p>Do not forget to grant access to you sheets for this service emails.</p>
+<h2 id="google-sheet-structure">Google Sheet structure</h2>
+<p>Expected columns:</p>
+<ul>
+<li>Location</li>
+<li>Sport</li>
+<li>Duration</li>
+<li>Date</li>
+<li>Distance</li>
+<li>Steps</li>
+<li>Comment</li>
+<li>Week</li>
+<li>Hours</li>
+<li>Week Day</li>
+<li>HR rest</li>
+<li>Sleep time</li>
+<li>VO2 max</li>
+</ul>
+<p>First row should be with the columns' titles.</p>
+<p>You can add another column titles in the mapping <a href="docstrings/columns_mapper/">COLUMNS_MAP</a></p>
+<h2 id="garmin-daily-command-line-interface">garmin-daily command line interface</h2>
+<p>To add rows to Google Sheet from Garmin Connect, use <code>garmin-daily</code>, get help with</p>
+<pre><code>garmin-daily --help
+</code></pre>
+<p>At minimum, you specify Google Sheet name and that's all</p>
+<pre><code>garmin-daily --sheet "My Fitness"
+</code></pre>
+<p>It also can automatically create you gym trainings if you have them
+on specific days.
+It's easier to correct already created rows then to create them
+manually from scratch.</p>
+<p>List the week days with gym trainings in the parameters
+and specify your gym location and usual training duration:</p>
+<pre><code>garmin-daily --sheet "My Fitness" \
+    -g mon -g tue -g fri \
+    --gym-duration 30 \
+    --gym-location "Cool place"
+</code></pre>
+<h1 id="github">GitHUB</h1>
+<p><a href="https://github.com/andgineer/garmin-daily">sorokin.engineer/garmin-daily</a></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="docstrings/" class="btn btn-neutral float-right" title="Overview">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+    
+      <span><a href="docstrings/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '.';</script>
+    <script src="js/theme_extra.js" defer></script>
+    <script src="js/theme.js" defer></script>
+      <script src="search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
+
+<!--
+MkDocs version : 1.4.2
+Build Date UTC : 2023-01-20 08:50:39.000689+00:00
+-->

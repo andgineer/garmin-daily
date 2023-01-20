@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Andrey Sorokin" /><link rel="canonical" href="https://andgineer.github.io/garmin-dayly/docstrings/" />
+      <link rel="shortcut icon" href="../img/favicon.ico" />
+    <title>Overview - garmin-dayly</title>
+    <link rel="stylesheet" href="../css/theme.css" />
+    <link rel="stylesheet" href="../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Overview";
+        var mkdocs_page_input_path = "docstrings/README.md";
+        var mkdocs_page_url = "/garmin-dayly/docstrings/";
+      </script>
+    
+    <script src="../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href=".." class="icon icon-home"> garmin-dayly
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="..">garmin-dayly</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API Reference</span></p>
+              <ul class="current">
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Overview</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#modules">Modules</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#functions">Functions</a>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="columns_mapper/">Columns mapper</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="garmin_aggregations/">Garmin aggregations</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="google_sheet/">Google sheet</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="snake_to_camel/">Snake to camel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="version/">Version</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="..">garmin-dayly</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href=".." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>API Reference &raquo;</li>
+      <li>Overview</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/andgineer/garmin-dayly/edit/master/docs/docstrings/README.md">Edit on garmin-dayly</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <!-- markdownlint-disable -->
+
+<h1 id="api-overview">API Overview</h1>
+<h2 id="modules">Modules</h2>
+<ul>
+<li><a href="columns_mapper/#module-columns_mapper"><code>columns_mapper</code></a>: Map fields to columns using spreadsheet header row.</li>
+<li><a href="garmin_aggregations/#module-garmin_aggregations"><code>garmin_aggregations</code></a>: Garmin data aggregated daily.</li>
+<li><a href="google_sheet/#module-google_sheet"><code>google_sheet</code></a>: Export Garmin data to Google Sheet.</li>
+<li><a href="snake_to_camel/#module-snake_to_camel"><code>snake_to_camel</code></a>: Convert names from Python (snake-name) to Java (camelName) name convention and vice-versa.</li>
+<li><a href="version/#module-version"><code>version</code></a></li>
+</ul>
+<h2 id="classes">Classes</h2>
+<ul>
+<li><a href="columns_mapper/#class-columnsmapper"><code>columns_mapper.ColumnsMapper</code></a>: Map columns based on a spreadsheet header row.</li>
+<li><a href="columns_mapper/#class-garmincol"><code>columns_mapper.GarminCol</code></a>: Columns of the Garmin daily data spreadsheet.</li>
+<li><a href="garmin_aggregations/#class-activity"><code>garmin_aggregations.Activity</code></a>: Garmin activity.</li>
+<li><a href="garmin_aggregations/#class-activityfield"><code>garmin_aggregations.ActivityField</code></a>: Activity field description.</li>
+<li><a href="garmin_aggregations/#class-aggfunc"><code>garmin_aggregations.AggFunc</code></a>: Activity field aggregation function.</li>
+<li><a href="garmin_aggregations/#class-garmindaily"><code>garmin_aggregations.GarminDaily</code></a>: Aggregate activities daily.</li>
+<li><a href="garmin_aggregations/#class-garminday"><code>garmin_aggregations.GarminDay</code></a>: Aggregate one day Garmin data.</li>
+<li><a href="google_sheet/#class-weekdays"><code>google_sheet.Weekdays</code></a>: Weekdays for datetime.weekday.</li>
+</ul>
+<h2 id="functions">Functions</h2>
+<ul>
+<li><a href="google_sheet/#function-add_rows_from_garmin"><code>google_sheet.add_rows_from_garmin</code></a>: Add activities from Garmin to the Google Sheet.</li>
+<li><a href="google_sheet/#function-create_day_rows"><code>google_sheet.create_day_rows</code></a>: Sheet rows for the day.</li>
+<li><a href="google_sheet/#function-detect_days_to_add"><code>google_sheet.detect_days_to_add</code></a>: Get last filled date and calculate number of days to add till today.</li>
+<li><a href="google_sheet/#function-localized_csv_raw"><code>google_sheet.localized_csv_raw</code></a>: Convert fields to the Google Sheet locale specific string representation.</li>
+<li><a href="google_sheet/#function-open_google_sheet"><code>google_sheet.open_google_sheet</code></a>: Open Google Sheet.</li>
+<li><a href="google_sheet/#function-search_missed_steps_in_sheet"><code>google_sheet.search_missed_steps_in_sheet</code></a>: Add missed in Garmin API steps data from earlier entered in the spreadsheet.</li>
+<li><a href="google_sheet/#function-sheet_week_day"><code>google_sheet.sheet_week_day</code></a>: Weekday number for Google Sheet.</li>
+<li><a href="google_sheet/#function-week_num"><code>google_sheet.week_num</code></a>: Week number for the sheet (starting from some arbitrary date).</li>
+<li><a href="snake_to_camel/#function-camel_to_upper_snake"><code>snake_to_camel.camel_to_upper_snake</code></a>: Convert camelCase to UPPER_SNAKE_CASE.</li>
+<li><a href="snake_to_camel/#function-snake_to_camel"><code>snake_to_camel.snake_to_camel</code></a>: Convert snake_case_names to camelCase.</li>
+</ul>
+<hr />
+<p><em>This file was automatically generated via <a href="https://github.com/ml-tooling/lazydocs">lazydocs</a>.</em></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href=".." class="btn btn-neutral float-left" title="garmin-dayly"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="columns_mapper/" class="btn btn-neutral float-right" title="Columns mapper">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href=".." style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="columns_mapper/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '..';</script>
+    <script src="../js/theme_extra.js" defer></script>
+    <script src="../js/theme.js" defer></script>
+      <script src="../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>

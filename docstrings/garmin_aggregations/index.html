@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="author" content="Andrey Sorokin" /><link rel="canonical" href="https://andgineer.github.io/garmin-dayly/docstrings/garmin_aggregations/" />
+      <link rel="shortcut icon" href="../../img/favicon.ico" />
+    <title>Garmin aggregations - garmin-dayly</title>
+    <link rel="stylesheet" href="../../css/theme.css" />
+    <link rel="stylesheet" href="../../css/theme_extra.css" />
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/styles/github.min.css" />
+    
+      <script>
+        // Current page data
+        var mkdocs_page_name = "Garmin aggregations";
+        var mkdocs_page_input_path = "docstrings/garmin_aggregations.md";
+        var mkdocs_page_url = "/garmin-dayly/docstrings/garmin_aggregations/";
+      </script>
+    
+    <script src="../../js/jquery-3.6.0.min.js" defer></script>
+    <!--[if lt IE 9]>
+      <script src="../../js/html5shiv.min.js"></script>
+    <![endif]-->
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.5.0/highlight.min.js"></script>
+      <script>hljs.initHighlightingOnLoad();</script> 
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side stickynav">
+    <div class="wy-side-scroll">
+      <div class="wy-side-nav-search">
+          <a href="../.." class="icon icon-home"> garmin-dayly
+        </a><div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+      <input type="text" name="q" placeholder="Search docs" title="Type search term here" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+                <li class="toctree-l1"><a class="reference internal" href="../..">garmin-dayly</a>
+                </li>
+              </ul>
+              <p class="caption"><span class="caption-text">API Reference</span></p>
+              <ul class="current">
+                  <li class="toctree-l1"><a class="reference internal" href="../">Overview</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../columns_mapper/">Columns mapper</a>
+                  </li>
+                  <li class="toctree-l1 current"><a class="reference internal current" href="./">Garmin aggregations</a>
+    <ul class="current">
+    <li class="toctree-l2"><a class="reference internal" href="#global-variables">Global Variables</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#class-aggfunc">class AggFunc</a>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#class-activityfield">class ActivityField</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#method-__init__">method __init__</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#class-activity">class Activity</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#method-__init___1">method __init__</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-estimate_steps">method estimate_steps</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#classmethod-init_from_garmin_activity">classmethod init_from_garmin_activity</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-to_km_h">method to_km_h</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#class-garminday">class GarminDay</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#method-__init___2">method __init__</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-aggregate_activities">method aggregate_activities</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-aggregate_activity">method aggregate_activity</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-aggregate_field">method aggregate_field</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-aggregate_walking_activity">method aggregate_walking_activity</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-detect_sport">method detect_sport</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-dump_attrs">method dump_attrs</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-dump_float">method dump_float</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-get_activities">method get_activities</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-get_hr">method get_hr</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-get_sleep">method get_sleep</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-get_steps">method get_steps</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-get_vo2max">method get_vo2max</a>
+    </li>
+        </ul>
+    </li>
+    <li class="toctree-l2"><a class="reference internal" href="#class-garmindaily">class GarminDaily</a>
+        <ul>
+    <li class="toctree-l3"><a class="reference internal" href="#method-__init___3">method __init__</a>
+    </li>
+    <li class="toctree-l3"><a class="reference internal" href="#method-login">method login</a>
+    </li>
+        </ul>
+    </li>
+    </ul>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../google_sheet/">Google sheet</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../snake_to_camel/">Snake to camel</a>
+                  </li>
+                  <li class="toctree-l1"><a class="reference internal" href="../version/">Version</a>
+                  </li>
+              </ul>
+      </div>
+    </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+      <nav class="wy-nav-top" role="navigation" aria-label="Mobile navigation menu">
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../..">garmin-dayly</a>
+        
+      </nav>
+      <div class="wy-nav-content">
+        <div class="rst-content"><div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../.." class="icon icon-home" alt="Docs"></a> &raquo;</li>
+          <li>API Reference &raquo;</li>
+      <li>Garmin aggregations</li>
+    <li class="wy-breadcrumbs-aside">
+          <a href="https://github.com/andgineer/garmin-dayly/edit/master/docs/docstrings/garmin_aggregations.md">Edit on garmin-dayly</a>
+    </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+            <div class="section" itemprop="articleBody">
+              
+                <!-- markdownlint-disable -->
+
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L0"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h1 id="module-garmin_aggregations"><kbd>module</kbd> <code>garmin_aggregations</code></h1>
+<p>Garmin data aggregated daily. </p>
+<h2 id="global-variables"><strong>Global Variables</strong></h2>
+<ul>
+<li><strong>MAX_LOGIN_RETRY</strong></li>
+<li><strong>WALKING_SPORT</strong></li>
+<li><strong>WALKING_LOCATION</strong></li>
+<li><strong>SPORT_UNIQUENESS</strong></li>
+<li><strong>SPORT_STEP_LENGTH_KM</strong></li>
+<li><strong>SPORT_DETECTION</strong></li>
+<li><strong>ACTIVITY_PATH_DELIMITER</strong></li>
+</ul>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L47"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h2 id="class-aggfunc"><kbd>class</kbd> <code>AggFunc</code></h2>
+<p>Activity field aggregation function. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L57"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h2 id="class-activityfield"><kbd>class</kbd> <code>ActivityField</code></h2>
+<p>Activity field description. </p>
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/\<string>"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-__init__"><kbd>method</kbd> <code>__init__</code></h3>
+<pre><code class="language-python">__init__(
+    garmin_field: Optional[str],
+    aggregate: Union[AggFunc, Callable[[Any], Any]]
+) → None
+</code></pre>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L70"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h2 id="class-activity"><kbd>class</kbd> <code>Activity</code></h2>
+<p>Garmin activity. </p>
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/\<string>"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-__init___1"><kbd>method</kbd> <code>__init__</code></h3>
+<pre><code class="language-python">__init__(
+    activity_type: Annotated[str, ActivityField(garmin_field='activityType/typeKey', aggregate=&lt;AggFunc.FIRST: 'first'&gt;)],
+    location_name: Annotated[str, ActivityField(garmin_field='', aggregate=&lt;AggFunc.FIRST: 'first'&gt;)],
+    duration: Annotated[Optional[float], ActivityField(garmin_field='', aggregate=&lt;AggFunc.SUM: &lt;built-in function sum&gt;&gt;)],
+    average_hr: Annotated[Optional[float], ActivityField(garmin_field='averageHR', aggregate=&lt;AggFunc.AVERAGE: 'average'&gt;)] = None,
+    calories: Annotated[Optional[float], ActivityField(garmin_field='', aggregate=&lt;AggFunc.SUM: &lt;built-in function sum&gt;&gt;)] = None,
+    distance: Annotated[Optional[float, int], ActivityField(garmin_field='', aggregate=&lt;AggFunc.SUM: &lt;built-in function sum&gt;&gt;)] = None,
+    elevation_gain: Annotated[Optional[float], ActivityField(garmin_field='', aggregate=&lt;AggFunc.SUM: &lt;built-in function sum&gt;&gt;)] = None,
+    max_hr: Annotated[Optional[float], ActivityField(garmin_field='maxHR', aggregate=&lt;AggFunc.MAX: &lt;built-in function max&gt;&gt;)] = None,
+    max_speed: Annotated[Optional[float], ActivityField(garmin_field='', aggregate=&lt;AggFunc.MAX: &lt;built-in function max&gt;&gt;)] = None,
+    average_speed: Annotated[Optional[float], ActivityField(garmin_field='', aggregate=&lt;AggFunc.MAX: &lt;built-in function max&gt;&gt;)] = None,
+    start_time: Annotated[Optional[str], ActivityField(garmin_field='startTimeLocal', aggregate=&lt;AggFunc.MIN: &lt;built-in function min&gt;&gt;)] = None,
+    steps: Annotated[Optional[int], ActivityField(garmin_field='', aggregate=&lt;AggFunc.SUM: &lt;built-in function sum&gt;&gt;)] = None,
+    moving_duration: Annotated[Optional[float], ActivityField(garmin_field='', aggregate=&lt;AggFunc.SUM: &lt;built-in function sum&gt;&gt;)] = None,
+    non_walking_steps: Annotated[Optional[int], ActivityField(garmin_field=None, aggregate=&lt;AggFunc.SUM: &lt;built-in function sum&gt;&gt;)] = None,
+    sport: Annotated[Optional[str], ActivityField(garmin_field=None, aggregate=&lt;AggFunc.FIRST: 'first'&gt;)] = None,
+    comment: Annotated[Optional[str], ActivityField(garmin_field=None, aggregate=&lt;AggFunc.FIRST: 'first'&gt;)] = None
+) → None
+</code></pre>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L127"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-estimate_steps"><kbd>method</kbd> <code>estimate_steps</code></h3>
+<pre><code class="language-python">estimate_steps() → int
+</code></pre>
+<p>Estimate steps for the activity. </p>
+<p>Garmin do not provide steps for some activities. Actually it erroneously calculate steps during such activities like roller skiing. We have to estimate this steps to subtract them from Walking activity steps. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L98"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="classmethod-init_from_garmin_activity"><kbd>classmethod</kbd> <code>init_from_garmin_activity</code></h3>
+<pre><code class="language-python">init_from_garmin_activity(garmin_activity: Dict[str, Any]) → Activity
+</code></pre>
+<p>Create Activity object from Garmin Connect activity fields. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L122"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-to_km_h"><kbd>method</kbd> <code>to_km_h</code></h3>
+<pre><code class="language-python">to_km_h(garmin_speed: Optional[float]) → Optional[float]
+</code></pre>
+<p>Convert m/s to km/h and round to 2 digits after point. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L146"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h2 id="class-garminday"><kbd>class</kbd> <code>GarminDay</code></h2>
+<p>Aggregate one day Garmin data. </p>
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L149"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-__init___2"><kbd>method</kbd> <code>__init__</code></h3>
+<pre><code class="language-python">__init__(api: Garmin, day: date) → None
+</code></pre>
+<p>Set useful Garmin day fields as attributes. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L247"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-aggregate_activities"><kbd>method</kbd> <code>aggregate_activities</code></h3>
+<pre><code class="language-python">aggregate_activities() → List[Activity]
+</code></pre>
+<p>Aggregate activities with same name and nearly same intensity. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L320"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-aggregate_activity"><kbd>method</kbd> <code>aggregate_activity</code></h3>
+<pre><code class="language-python">aggregate_activity(activity_name: str, activity_list: List[Activity]) → Activity
+</code></pre>
+<p>Aggregate the list of activities into one accumulative activity. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L349"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-aggregate_field"><kbd>method</kbd> <code>aggregate_field</code></h3>
+<pre><code class="language-python">aggregate_field(
+    activity_list: List[Activity],
+    field_decr: ActivityField,
+    field_name: str
+) → Union[str, int, float, NoneType]
+</code></pre>
+<p>Aggregate field_name according to field_descr. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L264"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-aggregate_walking_activity"><kbd>method</kbd> <code>aggregate_walking_activity</code></h3>
+<pre><code class="language-python">aggregate_walking_activity(activities: Dict[str, Activity]) → Activity
+</code></pre>
+<p>Aggregate full day walking into single activity. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L203"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-detect_sport"><kbd>method</kbd> <code>detect_sport</code></h3>
+<pre><code class="language-python">detect_sport(activity: Activity) → Tuple[str, bool]
+</code></pre>
+<p>Detect sport. </p>
+<p>Return (sport, separate) </p>
+<p>If the activity looks like significant one we want to see it separately. For example we would like to aggregate all small bicycle trips but not the big training one. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L295"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-dump_attrs"><kbd>method</kbd> <code>dump_attrs</code></h3>
+<pre><code class="language-python">dump_attrs(
+    obj: Any,
+    *attributes_names: str,
+    func: Optional[Callable[[Any], Any]] = None,
+    precision: int = 1
+) → str
+</code></pre>
+<p>Dump the obj's attributes as 'name=value'. </p>
+<p>Skip None or empty ("", 0). If there is ":" in the name then treat it as dump_name:attr_name </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L286"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-dump_float"><kbd>method</kbd> <code>dump_float</code></h3>
+<pre><code class="language-python">dump_float(val: Optional[float], precision: int = 1) → str
+</code></pre>
+<p>Round representation if float or empty. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L243"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-get_activities"><kbd>method</kbd> <code>get_activities</code></h3>
+<pre><code class="language-python">get_activities() → List[Dict[str, Any]]
+</code></pre>
+<p>Get activities. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L171"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-get_hr"><kbd>method</kbd> <code>get_hr</code></h3>
+<pre><code class="language-python">get_hr() → Tuple[Optional[int], Optional[int], Optional[int], Optional[int]]
+</code></pre>
+<p>Set HR attrs. </p>
+<p>Returns (min, max, average, rest) </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L189"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-get_sleep"><kbd>method</kbd> <code>get_sleep</code></h3>
+<pre><code class="language-python">get_sleep() → Tuple[Optional[int], Optional[int], Optional[int], Optional[int]]
+</code></pre>
+<p>Set sleep attrs. </p>
+<p>Returns (total, deep, light, REM) </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L238"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-get_steps"><kbd>method</kbd> <code>get_steps</code></h3>
+<pre><code class="language-python">get_steps() → int
+</code></pre>
+<p>Summarize steps for the day. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L165"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-get_vo2max"><kbd>method</kbd> <code>get_vo2max</code></h3>
+<pre><code class="language-python">get_vo2max() → float
+</code></pre>
+<p>Get VO2 max. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L374"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h2 id="class-garmindaily"><kbd>class</kbd> <code>GarminDaily</code></h2>
+<p>Aggregate activities daily. </p>
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L377"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-__init___3"><kbd>method</kbd> <code>__init__</code></h3>
+<pre><code class="language-python">__init__() → None
+</code></pre>
+<p>Init. </p>
+<hr />
+<p><a href="https://github.com/andgineer/garmin-daily/blob/master/src/garmin_daily/garmin_aggregations.py#L390"><img align="right" style="float:right;" src="https://img.shields.io/badge/-source-cccccc?style=flat-square"></a></p>
+<h3 id="method-login"><kbd>method</kbd> <code>login</code></h3>
+<pre><code class="language-python">login() → None
+</code></pre>
+<p>Login. </p>
+<hr />
+<p><em>This file was automatically generated via <a href="https://github.com/ml-tooling/lazydocs">lazydocs</a>.</em></p>
+              
+            </div>
+          </div><footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="Footer Navigation">
+        <a href="../columns_mapper/" class="btn btn-neutral float-left" title="Columns mapper"><span class="icon icon-circle-arrow-left"></span> Previous</a>
+        <a href="../google_sheet/" class="btn btn-neutral float-right" title="Google sheet">Next <span class="icon icon-circle-arrow-right"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <!-- Copyright etc -->
+  </div>
+
+  Built with <a href="https://www.mkdocs.org/">MkDocs</a> using a <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+</footer>
+          
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <div class="rst-versions" role="note" aria-label="Versions">
+  <span class="rst-current-version" data-toggle="rst-current-version">
+    
+    
+      <span><a href="../columns_mapper/" style="color: #fcfcfc">&laquo; Previous</a></span>
+    
+    
+      <span><a href="../google_sheet/" style="color: #fcfcfc">Next &raquo;</a></span>
+    
+  </span>
+</div>
+    <script>var base_url = '../..';</script>
+    <script src="../../js/theme_extra.js" defer></script>
+    <script src="../../js/theme.js" defer></script>
+      <script src="../../search/main.js" defer></script>
+    <script defer>
+        window.onload = function () {
+            SphinxRtdTheme.Navigation.enable(true);
+        };
+    </script>
+
+</body>
+</html>
