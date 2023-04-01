@@ -2,11 +2,11 @@
 [![Coverage Status](https://coveralls.io/repos/github/andgineer/garmin-daily/badge.svg?branch=main)](https://coveralls.io/github/andgineer/garmin-daily?branch=main)
 # Fill Google Sheets with data from Garmin Connect
 
-![garmin-daily.png](docs%2Fgarmin-daily.png)
+![garmin-daily.png](https://andgineer.github.io/garmin-daily/garmin-daily.png)
 
-# Documentation
+# User manual
 
-Detailed user manual [garmin-daily](https://andgineer.github.io/garmin-daily/)
+[garmin-daily](https://andgineer.github.io/garmin-daily/)
 
 # Developers
 
