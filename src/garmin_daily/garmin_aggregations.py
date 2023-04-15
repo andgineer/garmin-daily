@@ -320,13 +320,14 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
     @staticmethod
     def aggregate_activity(activity_name: str, activity_list: List[Activity]) -> Activity:
         """Aggregate the list of activities into one accumulative activity."""
-        fields = {}
         descr: Dict[str, ActivityField] = {
             field: get_type_hints(Activity, include_extras=True)[field].__metadata__[0]
             for field in get_type_hints(Activity, include_extras=True)
         }
-        for field_name, field_decr in descr.items():
-            fields[field_name] = GarminDay.aggregate_field(activity_list, field_decr, field_name)
+        fields = {
+            field_name: GarminDay.aggregate_field(activity_list, field_decr, field_name)
+            for field_name, field_decr in descr.items()
+        }
         fields["sport"] = activity_name.split(SPORT_UNIQUENESS)[
             0
         ]  # just sport name without start time
@@ -358,8 +359,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
         if field_decr.aggregate == AggFunc.FIRST:
             return getattr(activity_list[0], field_name)  # type: ignore
         if field_decr.aggregate == AggFunc.AVERAGE:
-            num = sum(1 for activity in activity_list if getattr(activity, field_name))
-            if num:
+            if num := sum(1 for activity in activity_list if getattr(activity, field_name)):
                 return (  # type: ignore
                     sum(
                         getattr(activity, field_name)

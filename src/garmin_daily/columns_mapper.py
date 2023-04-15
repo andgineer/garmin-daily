@@ -51,10 +51,8 @@ class ColumnsMapper:
         columns_map: Optional[Dict[str, Enum]] = None,
     ) -> None:
         """Init from spreadsheet title."""
-        if columns_map is None:
-            columns_map = COLUMNS_MAP
+        self.columns_map = COLUMNS_MAP if columns_map is None else columns_map
         self.columns_type = columns_type
-        self.columns_map = columns_map
         self.column_refs = {
             self.header_to_col(name): chr(ord("A") + idx) for idx, name in enumerate(header_row)
         }

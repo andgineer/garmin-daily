@@ -10,6 +10,19 @@
 
 # Developers
 
+#### Install
+
+    pip install garmin-daily
+
+#### Usage
+
+Read how to set Garmin Connect credentials in [user manual](https://andgineer.github.io/garmin-daily/)
+
+    daily = GarminDaily()
+    daily.login()
+    day = daily[datetime.date(2023, 4, 15)]
+    print(day.total_steps)
+
 #### Min Python version
 
 We use `Annotated` so at least Python 3.9

@@ -54,10 +54,8 @@ At minimum, you specify Google Sheet name and that's all
 
     garmin-daily --sheet "My Fitness"
 
-It also can automatically create you gym trainings if you have them
-on specific days.
-It's easier to correct already created rows then to create them
-manually from scratch.
+The app can make your gym schedule for you based on your workout days.
+It's easier to edit existing rows than to create new ones from scratch.
 
 List the week days with gym trainings in the parameters
 and specify your gym location and usual training duration:
