@@ -391,14 +391,14 @@ class GarminDaily:  # pylint: disable=too-few-public-methods
         """Login."""
         try:
             self.api.login()
-        except GarminConnectAuthenticationError:
+        except GarminConnectAuthenticationError as exc:
             raise ValueError(
                 "Wrong Garmin Connect login or password. "
                 "Check environment vars `GARMIN_EMAIL` and `GARMIN_PASSWORD`."
-            )
-        except Exception as e:
+            ) from exc
+        except Exception as exc:
             # Raising a SystemError with the original stack trace and error message
-            raise SystemError(f"An Garmin Connect API error occurred: {e}") from e
+            raise SystemError(f"An Garmin Connect API error occurred: {exc}") from exc
 
     def __getitem__(self, day: date) -> GarminDay:  # pragma: no cover
         """Get aggregated day."""
