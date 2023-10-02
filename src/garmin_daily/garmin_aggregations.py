@@ -8,7 +8,7 @@ from enum import Enum
 from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Union, get_type_hints
 
 import urllib3.exceptions
-from garminconnect import Garmin
+from garminconnect import Garmin, GarminConnectAuthenticationError
 from requests.adapters import HTTPAdapter, Retry
 
 from garmin_daily.snake_to_camel import snake_to_camel
@@ -389,7 +389,16 @@ class GarminDaily:  # pylint: disable=too-few-public-methods
 
     def login(self) -> None:  # pragma: no cover
         """Login."""
-        self.api.login()
+        try:
+            self.api.login()
+        except GarminConnectAuthenticationError:
+            raise ValueError(
+                "Wrong Garmin Connect login or password. "
+                "Check environment vars `GARMIN_EMAIL` and `GARMIN_PASSWORD`."
+            )
+        except Exception as e:
+            # Raising a SystemError with the original stack trace and error message
+            raise SystemError(f"An Garmin Connect API error occurred: {e}") from e
 
     def __getitem__(self, day: date) -> GarminDay:  # pragma: no cover
         """Get aggregated day."""
