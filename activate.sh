@@ -30,7 +30,6 @@ if [[ ! -d ${VENV_FOLDER} ]] ; then
       . ${VENV_FOLDER}/bin/activate
       echo -e $CYAN"installing development dependencies.."$NC
       python -m pip install --upgrade pip
-      python -m pip install -r requirements.txt
       python -m pip install -r requirements.dev.txt
       echo -e $CYAN"installing the package in developer mode.."$NC
       python -m pip install -e .

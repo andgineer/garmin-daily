@@ -379,13 +379,12 @@ class GarminDaily:  # pylint: disable=too-few-public-methods
         email = os.getenv("GARMIN_EMAIL")
         password = os.getenv("GARMIN_PASSWORD")
         self.api = Garmin(email, password)
-        self.api.session.verify = False  # pylint: disable=no-member
         retries = Retry(
             total=5,
             backoff_factor=3,  # retry in [0, 6, 12, 24, 48] seconds
             status_forcelist=[403],
         )
-        self.api.session.mount(  # pylint: disable=no-member
+        self.api.garth.sess.mount(  # pylint: disable=no-member
             "https://", HTTPAdapter(max_retries=retries)
         )
 
