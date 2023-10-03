@@ -234,4 +234,4 @@ def test_garmin_day_init():
     ), patch("garmin_daily.garmin_aggregations.Garmin") as garmin_mock:
         garmin_day = GarminDaily()
         garmin_mock.assert_called_with("fake-email", "fake-password")
-        garmin_day.api.session.mount.assert_called()
+        garmin_day.api.garth.sess.mount.assert_called()
