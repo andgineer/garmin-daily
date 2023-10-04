@@ -65,3 +65,6 @@ in `docs/`.
 Documentation generated from docstrings in sources:
 
 [reference](https://andgineer.github.io/garmin-daily/docstrings/)
+
+# All scripts
+    make help
