@@ -3,6 +3,7 @@ requests
 gspread
 markdownify
 click
+rich-click
 garminconnect
 click
 pandas

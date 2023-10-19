@@ -7,10 +7,10 @@ from enum import IntEnum
 from functools import lru_cache
 from typing import Dict, List, Optional, Tuple, Union
 
-import click
 import gspread
 import gspread.exceptions
 import pandas as pd
+import rich_click as click
 
 from garmin_daily import SPORT_STEP_LENGTH_KM, WALKING_SPORT, Activity, GarminDaily
 from garmin_daily.columns_mapper import ColumnsMapper, GarminCol
