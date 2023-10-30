@@ -66,21 +66,6 @@ repos:
           # ignore module level import not at top of file (E402) to skip tests with uninstalled modules (pytest.importorskip)
           - --ignore=E501,E203,W503,E402
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.6.1
-    hooks:
-    -   id: mypy
-        args: ["--install-types", "--non-interactive", "--strict", "--implicit-reexport", "--warn-unused-ignores", "--cache-fine-grained", "--no-namespace-packages"]
-
-  - repo: https://github.com/PyCQA/pylint
-    rev: v3.0.1
-    hooks:
-      - id: pylint
-        name: Pylint
-        entry: pylint --max-line-length=99 --ignore-imports=yes
-        files: \.py$
-        language: python
-
   - repo: https://github.com/PyCQA/pydocstyle
     rev: 6.3.0
     hooks:
@@ -90,3 +75,17 @@ repos:
         language: python
         args:
           - --ignore=D100,D203,D405,D407,D213,D413
+
+  - repo: local
+    hooks:
+      - id: mypy
+        name: MyPy
+        entry: mypy --install-types --non-interactive --strict --implicit-reexport --warn-unused-ignores --cache-fine-grained --no-namespace-packages
+        files: \.py$
+        language: python
+
+      - id: pylint
+        name: Pylint
+        entry: pylint --max-line-length=99 --ignore-imports=yes
+        files: \.py$
+        language: python

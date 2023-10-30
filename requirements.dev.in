@@ -11,3 +11,5 @@ types-requests
 pytest-cov
 coveralls
 freezegun
+pylint
+mypy
