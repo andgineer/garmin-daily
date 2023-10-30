@@ -35,7 +35,7 @@ repos:
           ]
 
   - repo: https://github.com/psf/black
-    rev: 23.10.0
+    rev: 23.10.1
     hooks:
       - id: black
         name: Fixes formatting
@@ -59,30 +59,27 @@ repos:
           # ignore module level import not at top of file (E402) to skip tests with uninstalled modules (pytest.importorskip)
           - --ignore=E501,E203,W503,E402
 
-  - repo: local
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.6.1
     hooks:
-      - id: mypy
-        name: mypy
-        entry: dmypy
-        files: \.py$
-        # pre-commit send full file list so exclude in .mypy.ini is ignored
-        exclude: (tests)
-        language: python
-        require_serial: true
-        additional_dependencies: ['types-requests']
-        args: ["run", "--", "--strict", "--implicit-reexport", "--warn-unused-ignores", "--cache-fine-grained", "--no-namespace-packages"]
+    -   id: mypy
+        args: ["--install-types", "--non-interactive", "--strict", "--implicit-reexport", "--warn-unused-ignores", "--cache-fine-grained", "--no-namespace-packages"]
 
+  - repo: https://github.com/PyCQA/pylint
+    rev: v3.0.1
+    hooks:
       - id: pylint
         name: Pylint
         entry: pylint --max-line-length=99 --ignore-imports=yes
         files: \.py$
-        exclude: (tests|version.py|setup.py)
         language: python
 
+  - repo: https://github.com/PyCQA/pydocstyle
+    rev: 6.3.0
+    hooks:
       - id: pydocstyle
         name: docstrings
         entry: pydocstyle
         language: python
-        exclude: (tests|version.py)
         args:
           - --ignore=D100,D203,D405,D407,D213,D413
