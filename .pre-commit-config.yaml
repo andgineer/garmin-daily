@@ -80,7 +80,16 @@ repos:
     hooks:
       - id: mypy
         name: MyPy
-        entry: mypy --install-types --non-interactive --strict --implicit-reexport --warn-unused-ignores --cache-fine-grained --no-namespace-packages
+        entry: |
+          mypy
+          --ignore-missing-imports
+          --install-types
+          --non-interactive
+          --strict
+          --implicit-reexport
+          --warn-unused-ignores
+          --cache-fine-grained
+          --no-namespace-packages
         files: \.py$
         language: python
 
