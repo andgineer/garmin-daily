@@ -25,7 +25,7 @@ Do not forget to install, so static check github action won't fail on your commi
     make help
 
 ### API
-[Auto-generated reference](https://andgineer.github.io/garmin-daily/api-reference/).
+[Auto-generated reference](https://andgineer.github.io/garmin-daily/).
 
 ```python
 daily = GarminDaily()
@@ -36,10 +36,6 @@ print(day.total_steps)
 
 ### Garmin Connect credentials
 [user manual](https://andgineer.github.io/garmin-daily/en/)
-
-### Docs
-Github pages https://andgineer.github.io/garmin-daily/ are auto created from markdown files
-in `docs/`.
 
 ## Coverage report
 * [Codecov](https://app.codecov.io/gh/andgineer/garmin-daily/tree/main/src%2Fgarmin_daily)
