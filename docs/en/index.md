@@ -64,7 +64,7 @@ Do not forget to grant access to you sheets for this service emails.
 
 First row should be with the columns' titles.
 
-You can add another column titles in the mapping [COLUMNS_MAP](api-reference/columns_mapper/)
+You can add another column titles in the mapping [COLUMNS_MAP](../api-reference/columns_mapper/)
 
 ## garmin-daily command line interface
 

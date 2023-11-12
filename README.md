@@ -1,8 +1,8 @@
 [![Build Status](https://github.com/andgineer/garmin-daily/workflows/Test/badge.svg)](https://github.com/andgineer/garmin-daily/actions)
-[![Coverage Status](https://coveralls.io/repos/github/andgineer/garmin-daily/badge.svg?branch=main)](https://coveralls.io/github/andgineer/garmin-daily?branch=main)
+[![Coverage](https://raw.githubusercontent.com/andgineer/garmin-daily/python-coverage-comment-action-data/badge.svg)](https://htmlpreview.github.io/?https://github.com/andgineer/garmin-daily/blob/python-coverage-comment-action-data/htmlcov/index.html)
 # Fill Google Sheets with data from Garmin Connect
 
-![garmin-daily.png](https://andgineer.github.io/garmin-daily/garmin-daily.png)
+![garmin-daily.png](https://andgineer.github.io/garmin-daily/en/garmin-daily.png)
 
 ## User manual
 
@@ -42,5 +42,5 @@ Github pages https://andgineer.github.io/garmin-daily/ are auto created from mar
 in `docs/`.
 
 ## Coverage report
-* [Codecov](https://app.codecov.io/gh/andgineer/garmin-daily/tree/master/src%2Fgarmin_daily)
+* [Codecov](https://app.codecov.io/gh/andgineer/garmin-daily/tree/main/src%2Fgarmin_daily)
 * [Coveralls](https://coveralls.io/github/andgineer/garmin-daily)
