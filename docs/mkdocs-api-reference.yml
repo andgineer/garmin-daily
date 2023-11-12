@@ -6,8 +6,8 @@ site_author: Andrey Sorokin
 repo_name: garmin-daily
 repo_url: https://github.com/andgineer/garmin-daily
 edit_uri: edit/main/docs
-docs_dir: 'en'
-site_dir: '../site/en'
+docs_dir: 'api-reference'
+site_dir: '../site'
 
 plugins:
   - awesome-pages
@@ -30,12 +30,3 @@ theme:
     - toc.integrate
     - navigation.tracking
     - content.code.copy
-
-#extra:
-#  alternate:
-#    - name: English
-#      link: /garmin-daily/en/
-#      lang: en
-#    - name: Russian
-#      link: /garmin-daily/ru/
-#      lang: ru

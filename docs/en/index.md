@@ -1,4 +1,4 @@
-# garmin-dayly
+# garmin-daily
 
 Fill Google Sheets with fitness data from Garmin Connect.
 

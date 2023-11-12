@@ -34,6 +34,12 @@ docs:
 	open -a "Google Chrome" http://127.0.0.1:8000/garmin-daily/en/
 	mkdocs serve -f docs/mkdocs-en.yml
 
+.HELP: docs-api  ## Build the API documentation from docstrings
+docs-api:
+	bash ./scripts/build-docs.sh
+	open -a "Google Chrome" http://127.0.0.1:8000/garmin-daily/
+	mkdocs serve -f docs/mkdocs-api-reference.yml
+
 .HELP: help  ## Display this message
 help:
 	@grep -E \
