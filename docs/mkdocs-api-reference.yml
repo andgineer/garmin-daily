@@ -7,7 +7,7 @@ repo_name: garmin-daily
 repo_url: https://github.com/andgineer/garmin-daily
 edit_uri: edit/main/docs
 docs_dir: 'api-reference'
-site_dir: '../site'
+site_dir: '../site/api-reference/'
 
 plugins:
   - awesome-pages

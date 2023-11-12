@@ -25,7 +25,7 @@ Do not forget to install, so static check github action won't fail on your commi
     make help
 
 ### API
-[Auto-generated reference](https://andgineer.github.io/garmin-daily/).
+[Auto-generated reference](https://andgineer.github.io/garmin-daily/api-reference/).
 
 ```python
 daily = GarminDaily()
