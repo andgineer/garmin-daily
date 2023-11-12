@@ -9,6 +9,15 @@
 [garmin-daily](https://andgineer.github.io/garmin-daily/en/)
 
 ## Developers
+### API
+[Auto-generated reference](https://andgineer.github.io/garmin-daily/api-reference/).
+
+```python
+daily = GarminDaily()
+daily.login()
+day = daily[datetime.date(2023, 4, 15)]
+print(day.total_steps)
+```
 
 ### Create / activate environment
     . ./activate.sh
@@ -23,16 +32,6 @@ Do not forget to install, so static check github action won't fail on your commi
 
 ### Scripts
     make help
-
-### API
-[Auto-generated reference](https://andgineer.github.io/garmin-daily/api-reference/).
-
-```python
-daily = GarminDaily()
-daily.login()
-day = daily[datetime.date(2023, 4, 15)]
-print(day.total_steps)
-```
 
 ### Garmin Connect credentials
 [user manual](https://andgineer.github.io/garmin-daily/en/)
