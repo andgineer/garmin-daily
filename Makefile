@@ -27,9 +27,12 @@ reqs:
 	pip install -r requirements.dev.txt
 	pip install -r requirements.txt
 
+.PHONY: docs # mark as phony so it always runs even we have a docs folder
 .HELP: docs  ## Build the documentation
 docs:
 	bash ./scripts/build-docs.sh
+	open -a "Google Chrome" http://127.0.0.1:8000/garmin-daily/en/
+	mkdocs serve -f docs/mkdocs-en.yml
 
 .HELP: help  ## Display this message
 help:

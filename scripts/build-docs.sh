@@ -3,10 +3,7 @@
 # Create docs in docs/
 #
 
-lazydocs \
-    --output-path="./docs/docstrings" \
-    --overview-file="README.md" \
-    --src-base-url="https://github.com/andgineer/garmin-daily/blob/master/" \
-    src/garmin_daily
+./scripts/docstrings.sh
 
-mkdocs build
+mkdocs build --config-file docs/mkdocs-en.yml
+# mkdocs build --dirty --config-file docs/mkdocs-ru.yml

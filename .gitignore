@@ -1,5 +1,5 @@
 site
-docs/docstrings
+**/api-reference/
 **/.DS_Store
 
 # Byte-compiled / optimized / DLL files

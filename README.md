@@ -4,67 +4,43 @@
 
 ![garmin-daily.png](https://andgineer.github.io/garmin-daily/garmin-daily.png)
 
-# User manual
+## User manual
 
-[garmin-daily](https://andgineer.github.io/garmin-daily/)
+[garmin-daily](https://andgineer.github.io/garmin-daily/en/)
 
-# Developers
+## Developers
 
-#### Install
+### Create / activate environment
+    . ./activate.sh
 
-    pip install garmin-daily
+It will also install the package in [edit mode](https://realpython.com/what-is-pip/#installing-packages-in-editable-mode-to-ease-development).
 
-#### Usage
-
-Read how to set Garmin Connect credentials in [user manual](https://andgineer.github.io/garmin-daily/)
-
-    daily = GarminDaily()
-    daily.login()
-    day = daily[datetime.date(2023, 4, 15)]
-    print(day.total_steps)
-
-#### Min Python version
-
-We use `Annotated` so at least Python 3.9
-
-#### pre-commit
-
+### pre-commit
 Do not forget to install, so static check github action won't fail on your commits
 
     pip install pre-commit
     pre-commit install  # in the project folder
 
-#### Create / activate environment
-    . ./activate.sh
+### Scripts
+    make help
 
-Delete `venv/` if you want to reinstall everything from requirements*.txt
+### API
+[Auto-generated reference](https://andgineer.github.io/garmin-daily/api-reference/).
 
-    make reqs  # if you want to refresh dependencies
-    deactivate
-    rm -f venv
-    pip install --upgrade pip-tools
-    . ./activate.sh
+```python
+daily = GarminDaily()
+daily.login()
+day = daily[datetime.date(2023, 4, 15)]
+print(day.total_steps)
+```
 
-#### Compile pinned to versions requirements*.txt from requirements*.in files
-Using pip-tools
+### Garmin Connect credentials
+[user manual](https://andgineer.github.io/garmin-daily/en/)
 
-    make reqs
-
-#### Release version
-    make ver-bug/feature/release
-
-Github actin will automatically update the pip package on pypi.org
-
-#### Docs
-
+### Docs
 Github pages https://andgineer.github.io/garmin-daily/ are auto created from markdown files
 in `docs/`.
 
-# Autodocs
-
-Documentation generated from docstrings in sources:
-
-[reference](https://andgineer.github.io/garmin-daily/docstrings/)
-
-# All scripts
-    make help
+## Coverage report
+* [Codecov](https://app.codecov.io/gh/andgineer/garmin-daily/tree/master/src%2Fgarmin_daily)
+* [Coveralls](https://coveralls.io/github/andgineer/garmin-daily)

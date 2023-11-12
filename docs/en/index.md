@@ -5,8 +5,31 @@ Fill Google Sheets with fitness data from Garmin Connect.
 ![garmin-daily.png](garmin-daily.png)
 
 ## Installation
+To install in isolated environments so it won't mess with your system python packages, 
+use [pipx](https://pypa.github.io/pipx/)
 
-    pip install garmin-daily
+=== "MacOS"
+    ```bash
+    brew install pipx
+    pipx ensurepath
+    ```
+
+=== "Linux"
+    ```bash
+    python3 -m pip install --user pipx
+    python3 -m pipx ensurepath
+    ```
+
+=== "Windows"
+    ```bash
+    # If you installed python using the app-store, replace `python` with `python3` in the next line.
+    python -m pip install --user pipx
+    ```
+
+Then install `garmin-daily` with pipx
+```bash
+pipx install garmin-daily
+```
 
 ## Credentials
 
@@ -24,25 +47,24 @@ Do not forget to grant access to you sheets for this service emails.
 
 ## Google Sheet structure
 
-Expected columns:
-
-- Location
-- Sport
-- Duration
-- Date
-- Distance
-- Steps
-- Comment
-- Week
-- Hours
-- Week Day
-- HR rest
-- Sleep time
-- VO2 max
+??? optional-class "Expected columns"
+    - Location
+    - Sport
+    - Duration
+    - Date
+    - Distance
+    - Steps
+    - Comment
+    - Week
+    - Hours
+    - Week Day
+    - HR rest
+    - Sleep time
+    - VO2 max
 
 First row should be with the columns' titles.
 
-You can add another column titles in the mapping [COLUMNS_MAP](docstrings/columns_mapper/)
+You can add another column titles in the mapping [COLUMNS_MAP](api-reference/columns_mapper/)
 
 ## garmin-daily command line interface
 
@@ -65,6 +87,3 @@ and specify your gym location and usual training duration:
         --gym-duration 30 \
         --gym-location "Cool place"
 
-# GitHUB
-
-[sorokin.engineer/garmin-daily](https://github.com/andgineer/garmin-daily)
