@@ -9,9 +9,10 @@
 [garmin-daily](https://andgineer.github.io/garmin-daily/en/)
 
 ## Developers
-### API
-[Auto-generated reference](https://andgineer.github.io/garmin-daily/api-reference/).
+### Codebase structure
+[Auto-generated reference](https://andgineer.github.io/garmin-daily/docstrings/).
 
+#### Usage example
 ```python
 daily = GarminDaily()
 daily.login()
@@ -24,17 +25,27 @@ print(day.total_steps)
 
 It will also install the package in [edit mode](https://realpython.com/what-is-pip/#installing-packages-in-editable-mode-to-ease-development).
 
-### pre-commit
-Do not forget to install, so static check github action won't fail on your commits
+Certainly! Here's a more concise version:
 
-    pip install pre-commit
-    pre-commit install  # in the project folder
+### Setting Up Pre-commit for Formatting and Static Checks
+
+1. **Install Pre-commit**:
+   ```bash
+   pip install pre-commit
+   ```
+
+2. **Configure Pre-commit**:
+   ```bash
+   pre-commit install
+   ```
+
+This sets up `pre-commit` in your local environment to run the same static checks as the `static` GitHub Action.
 
 ### Scripts
     make help
 
-### Garmin Connect credentials
-[user manual](https://andgineer.github.io/garmin-daily/en/)
+### Credentials
+[user manual](https://andgineer.github.io/garmin-daily/en/#credentials)
 
 ## Coverage report
 * [Codecov](https://app.codecov.io/gh/andgineer/garmin-daily/tree/main/src%2Fgarmin_daily)

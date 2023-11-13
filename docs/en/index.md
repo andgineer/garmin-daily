@@ -5,8 +5,8 @@ Fill Google Sheets with fitness data from Garmin Connect.
 ![garmin-daily.png](garmin-daily.png)
 
 ## Installation
-To install in isolated environments so it won't mess with your system python packages, 
-use [pipx](https://pypa.github.io/pipx/)
+Install using [`pipx`](https://pypa.github.io/pipx/) for isolated environments, which prevents interference 
+with your system's Python packages:
 
 === "MacOS"
     ```bash
@@ -26,9 +26,36 @@ use [pipx](https://pypa.github.io/pipx/)
     python -m pip install --user pipx
     ```
 
-Then install `garmin-daily` with pipx
+**Final Step**: Once `pipx` is set up, install `garmin-daily`:
+
 ```bash
 pipx install garmin-daily
+```
+
+## Command Line Interface
+
+### Getting Help
+```bash
+garmin-daily --help
+```
+
+### Basic Usage
+At a minimum, you only need to specify the Google Sheet name:
+```bash
+garmin-daily --sheet "My Fitness"
+```
+
+### Advanced Usage
+The app can also help create your gym schedule based on your workout days. 
+It's often easier to edit existing rows than to create new ones from scratch.
+
+To list the weekdays when you have gym training, specify your gym location, 
+and set the usual training duration, use:
+```bash
+garmin-daily --sheet "My Fitness" \
+    -g mon -g tue -g fri \
+    --gym-duration 30 \
+    --gym-location "Cool place"
 ```
 
 ## Credentials
@@ -64,26 +91,4 @@ Do not forget to grant access to you sheets for this service emails.
 
 First row should be with the columns' titles.
 
-You can add another column titles in the mapping [COLUMNS_MAP](../api-reference/columns_mapper/)
-
-## garmin-daily command line interface
-
-To add rows to Google Sheet from Garmin Connect, use `garmin-daily`, get help with
-
-    garmin-daily --help
-
-At minimum, you specify Google Sheet name and that's all
-
-    garmin-daily --sheet "My Fitness"
-
-The app can make your gym schedule for you based on your workout days.
-It's easier to edit existing rows than to create new ones from scratch.
-
-List the week days with gym trainings in the parameters
-and specify your gym location and usual training duration:
-
-    garmin-daily --sheet "My Fitness" \
-        -g mon -g tue -g fri \
-        --gym-duration 30 \
-        --gym-location "Cool place"
-
+You can add another column titles in the mapping [COLUMNS_MAP](../docstrings/columns_mapper/).
