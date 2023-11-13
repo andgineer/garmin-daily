@@ -25,8 +25,6 @@ print(day.total_steps)
 
 It will also install the package in [edit mode](https://realpython.com/what-is-pip/#installing-packages-in-editable-mode-to-ease-development).
 
-Certainly! Here's a more concise version:
-
 ### Setting Up Pre-commit for Formatting and Static Checks
 
 1. **Install Pre-commit**:
