@@ -44,7 +44,7 @@ setuptools.setup(
     },
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://andgineer.github.io/garmin-daily/",
+    url="https://andgineer.github.io/garmin-daily/en/",
     package_dir={"": "src"},
     packages=setuptools.find_packages(where="src"),
     install_requires=requirements,
