@@ -33,11 +33,8 @@ pipx install garmin-daily
 ```
 
 ## Command Line Interface
-
-### Getting Help
-```bash
-garmin-daily --help
-```
+??? note "garmin-daily --help"
+    ![help.png](help.png)
 
 ### Basic Usage
 At a minimum, you only need to specify the Google Sheet name:

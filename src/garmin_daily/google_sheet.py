@@ -118,7 +118,7 @@ def main(  # pylint: disable=too-many-arguments
 ) -> None:
     """Fill Google sheet with data from Garmin.
 
-    Documentation https://andgineer.github.io/garmin-daily/
+    Documentation https://andgineer.github.io/garmin-daily/en/
     """
     if version:
         print(f"{VERSION}")
