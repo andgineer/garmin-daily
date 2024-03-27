@@ -6,7 +6,6 @@ mkdocs-material
 pymdown-extensions
 mkdocs-awesome-pages-plugin
 mkdocs
-mkdocs-awesome-pages-plugin
 
 # test
 pytest
