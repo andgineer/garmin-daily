@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+         <loc>https://andgineer.github.io/garmin-daily/</loc>
+         <lastmod>2024-03-27</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://andgineer.github.io/garmin-daily/columns_mapper/</loc>
+         <lastmod>2024-03-27</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://andgineer.github.io/garmin-daily/garmin_aggregations/</loc>
+         <lastmod>2024-03-27</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://andgineer.github.io/garmin-daily/google_sheet/</loc>
+         <lastmod>2024-03-27</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://andgineer.github.io/garmin-daily/snake_to_camel/</loc>
+         <lastmod>2024-03-27</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+    <url>
+         <loc>https://andgineer.github.io/garmin-daily/version/</loc>
+         <lastmod>2024-03-27</lastmod>
+         <changefreq>daily</changefreq>
+    </url>
+</urlset>
