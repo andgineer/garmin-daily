@@ -164,9 +164,12 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
 
     def get_vo2max(self) -> float:
         """Get VO2 max."""
-        return self.api.get_training_status(self.date_str)["mostRecentVO2Max"][  # type: ignore
-            "generic"
-        ]["vo2MaxValue"]
+        try:
+            return self.api.get_training_status(self.date_str)["mostRecentVO2Max"][  # type: ignore
+                "generic"
+            ]["vo2MaxValue"]
+        except Exception:  # pylint: disable=broad-except
+            return 0.0
 
     def get_hr(self) -> Tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
         """Set HR attrs.

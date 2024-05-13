@@ -1,4 +1,5 @@
 """Export Garmin data to Google Sheet."""
+
 import locale
 import sys
 import time
@@ -11,6 +12,7 @@ import gspread
 import gspread.exceptions
 import pandas as pd
 import rich_click as click
+from gspread.utils import ValueInputOption
 
 from garmin_daily import SPORT_STEP_LENGTH_KM, WALKING_SPORT, Activity, GarminDaily
 from garmin_daily.columns_mapper import ColumnsMapper, GarminCol
@@ -85,7 +87,7 @@ def week_num(day: date) -> int:
     "--gym-location",
     "-l",
     "gym_location",
-    default="The classic Bulevar Oslobođenja",
+    default="No Limit Gym",
     show_default=True,
     help="Gym training duration, minutes.",
     nargs=1,
@@ -185,7 +187,7 @@ def add_rows_from_garmin(  # pylint: disable=too-many-arguments, too-many-locals
             search_missed_steps_in_sheet(fitness, rows, columns)
             for row in rows:
                 print("; ".join(row))
-            fitness.insert_rows(rows, row=2, value_input_option="USER_ENTERED")
+            fitness.insert_rows(rows, row=2, value_input_option=ValueInputOption.user_entered)
         if batch < batches_num - 1:  # do not pause on last iteration
             time.sleep(API_DELAY)  # pause to prevent robot protection from Garmin API
 
@@ -327,33 +329,39 @@ def create_day_rows(  # pylint: disable=too-many-arguments
             GarminCol.SPORT: activity.sport,
             GarminCol.DURATION: round(activity.duration / 60) if activity.duration else "",
             GarminCol.DATE: day.strftime("%Y-%m-%d"),
-            GarminCol.DISTANCE: round(activity.distance / 1000, 2)
-            if activity.distance
-            else (
-                f"=({activity.steps}"
-                f"-{activity.non_walking_steps if activity.non_walking_steps else 0})"
-                f"*{SPORT_STEP_LENGTH_KM[activity.sport]:.2n}"
-            )
-            if activity.sport in SPORT_STEP_LENGTH_KM
-            else "",
-            GarminCol.STEPS: f"={activity.steps}-{activity.non_walking_steps}"
-            if activity.non_walking_steps
-            else f"={activity.steps}"
-            if activity.sport == WALKING_SPORT
-            else "",
+            GarminCol.DISTANCE: (
+                round(activity.distance / 1000, 2)
+                if activity.distance
+                else (
+                    (
+                        f"=({activity.steps}"
+                        f"-{activity.non_walking_steps if activity.non_walking_steps else 0})"
+                        f"*{SPORT_STEP_LENGTH_KM[activity.sport]:.2n}"
+                    )
+                    if activity.sport in SPORT_STEP_LENGTH_KM
+                    else ""
+                )
+            ),
+            GarminCol.STEPS: (
+                f"={activity.steps}-{activity.non_walking_steps}"
+                if activity.non_walking_steps
+                else f"={activity.steps}" if activity.sport == WALKING_SPORT else ""
+            ),
             GarminCol.COMMENT: activity.comment,
             GarminCol.WEEK: week_num(day),
             GarminCol.HOURS: round(activity.duration / 60 / 60, 1) if activity.duration else 0,
             GarminCol.WEEKDAY: sheet_week_day(day),
-            GarminCol.HR_REST: round(gday.hr_rest, 1)
-            if activity.sport == WALKING_SPORT and gday.hr_rest
-            else "",
-            GarminCol.SLEEP_TIME: round(gday.sleep_time, 1)
-            if activity.sport == WALKING_SPORT and gday.sleep_time
-            else "",
-            GarminCol.VO2_MAX: gday.vo2max
-            if activity.sport == WALKING_SPORT and gday.vo2max
-            else "",
+            GarminCol.HR_REST: (
+                round(gday.hr_rest, 1) if activity.sport == WALKING_SPORT and gday.hr_rest else ""
+            ),
+            GarminCol.SLEEP_TIME: (
+                round(gday.sleep_time, 1)
+                if activity.sport == WALKING_SPORT and gday.sleep_time
+                else ""
+            ),
+            GarminCol.VO2_MAX: (
+                gday.vo2max if activity.sport == WALKING_SPORT and gday.vo2max else ""
+            ),
         }
         for activity in gday.activities
     ]
