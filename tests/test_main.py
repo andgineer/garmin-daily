@@ -292,17 +292,29 @@ def test_locations_gym_conflict():
 
 def test_gym_location_default_ignored():
     """Test that default gym location is ignored when gym is in locations."""
-    # todo: the test takes around 3 seconds to run, something wrong
     runner = CliRunner()
-    result = runner.invoke(
-        main,
-        [
-            "--locations", "running=Park",
-            "--locations", "gym=Special Gym",
-            # Not specifying --gym-location should use default "No Limit Gym"
-            # but it should be ignored because gym is in locations
-        ]
-    )
+    fitness = mock.MagicMock()
+    columns = mock.MagicMock()
+    start_date = datetime.date(2022, 1, 1)
+    days_to_add = DAY_TO_ADD_WITHOUT_FORCE
+
+    with mock.patch(
+            "garmin_daily.google_sheet.detect_days_to_add"
+    ) as mocked_detect_days_to_add, mock.patch(
+        "garmin_daily.google_sheet.add_rows_from_garmin"
+    ) as mocked_add_rows_from_garmin, mock.patch(
+        "garmin_daily.google_sheet.open_google_sheet", return_value=(fitness, columns)
+    ):
+        mocked_detect_days_to_add.return_value = (start_date, days_to_add)
+        result = runner.invoke(
+            main,
+            [
+                "--locations", "running=Park",
+                "--locations", "gym=Special Gym",
+                # Not specifying --gym-location should use default "No Limit Gym"
+                # but it should be ignored because gym is in locations
+            ]
+        )
     assert result.exit_code == 0
     assert "Special Gym" in result.output
     assert "No Limit Gym" not in result.output
