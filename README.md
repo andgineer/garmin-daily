@@ -6,10 +6,10 @@
 |------------------------------------------ | -------: | -------: | ------: | --------: |
 | src/garmin\_daily/columns\_mapper.py      |       25 |        1 |     96% |        75 |
 | src/garmin\_daily/garmin\_aggregations.py |      187 |        2 |     99% |   171-172 |
-| src/garmin\_daily/google\_sheet.py        |      128 |       11 |     91% |150, 189, 201-202, 248, 295-297, 301-302, 373 |
+| src/garmin\_daily/google\_sheet.py        |      179 |       14 |     92% |198-200, 244, 283, 295-296, 342, 389-391, 395-396, 476 |
 | src/garmin\_daily/snake\_to\_camel.py     |        7 |        0 |    100% |           |
 | src/garmin\_daily/version.py              |        1 |        0 |    100% |           |
-|                                 **TOTAL** |  **348** |   **14** | **96%** |           |
+|                                 **TOTAL** |  **399** |   **17** | **96%** |           |
 
 
 ## Setup coverage badge
