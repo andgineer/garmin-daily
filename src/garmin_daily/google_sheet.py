@@ -1,249 +1,22 @@
-"""Export Garmin data to Google Sheet."""
+"""Google Sheet related functions."""
 
 import locale
-import re
 import sys
 import time
 from datetime import date, datetime, timedelta
-from enum import IntEnum
 from functools import lru_cache
 from typing import Dict, List, Optional, Tuple, Union
 
-import click.core as click_core
 import gspread
-import gspread.exceptions
 import pandas as pd
-import rich_click as click
 from gspread.utils import ValueInputOption
 
 from garmin_daily import SPORT_STEP_LENGTH_KM, WALKING_SPORT, Activity, GarminDaily
 from garmin_daily.columns_mapper import ColumnsMapper, GarminCol
-from garmin_daily.version import VERSION
-
-SHEET_NAME_DEFAULT = "05 Fitness"
-
-
-class Weekdays(IntEnum):
-    """Weekdays for datetime.weekday."""
-
-    MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY, SUNDAY = range(7)
-
-
-# Weekdays based on the PC locale, not the Google Sheet locale
-PCWeekdays = [date(2001, 1, i).strftime("%a") for i in range(1, 8)]
+from garmin_daily.location_mapper import LocationMapper
 
 BATCH_SIZE = 7  # Add days by batches to prevent block grom Garmin API
 API_DELAY = 15  # seconds to wait between batches to prevent robot protection from Garmin API
-DAY_TO_ADD_WITHOUT_FORCE = 7  # proof against unknown bugs. to add more days use --force
-
-GYM_LOCATION_DEFAULT = "No Limit Gym"
-GYM_PATTERN = "gym"
-
-
-class LocationMapper:
-    """Maps activities to locations based on pattern matching."""
-
-    def __init__(
-        self,
-        mappings: List[Tuple[str, str]],
-        gym_location: Optional[str] = None,
-        is_default_gym_location: bool = False,
-    ) -> None:
-        """Initialize with list of (pattern, location) tuples."""
-        # First find all gym locations
-        gym_locations = []
-        if gym_location and not is_default_gym_location:
-            gym_locations.append(("--gym-location parameter", gym_location))
-
-        for pattern, location in mappings:
-            if GYM_PATTERN in pattern.lower():
-                gym_locations.append((f"locations pattern '{pattern}'", location))
-
-        if len(gym_locations) > 1:
-            locations_str = "\n".join(
-                f"  - {source}: {location}" for source, location in gym_locations
-            )
-            raise ValueError(
-                f"Gym location defined multiple times:\n{locations_str}\n"
-                f"Please use either --gym-location "
-                f"or define gym in --locations parameter, not both."
-            )
-
-        self.gym_location = gym_locations[0][1] if gym_locations else gym_location
-
-        # Now compile patterns
-        self.mappings = [
-            (re.compile(pattern, re.IGNORECASE), location) for pattern, location in mappings
-        ]
-
-    def get_location(self, activity_name: str, default_location: str) -> str:
-        """Get location for activity based on matching rules."""
-        for pattern, location in self.mappings:
-            if pattern.search(activity_name):
-                return location
-        return default_location
-
-    def get_gym_location(self) -> Optional[str]:
-        """Return configured gym location."""
-        return self.gym_location
-
-
-def sheet_week_day(day: date) -> int:
-    """Weekday number for Google Sheet.
-
-    Monday - 1
-    ...
-    Sunday - 7
-    """
-    return day.weekday() + 1
-
-
-def week_num(day: date) -> int:
-    """Week number for the sheet (starting from some arbitrary date)."""
-    return int(round((day - date(2013, 1, 13)).days / 7))
-
-
-@click.command()
-@click.option(
-    "--sheet",
-    "-s",
-    "sheet",
-    default=SHEET_NAME_DEFAULT,
-    show_default=True,
-    help="Google sheet name to add activities from Garmin.",
-    nargs=1,
-)
-@click.option(
-    "--gym-day",
-    "-g",
-    "gym_weekdays",
-    default=[
-        PCWeekdays[Weekdays.MONDAY.value],
-        PCWeekdays[Weekdays.TUESDAY.value],
-        PCWeekdays[Weekdays.FRIDAY.value],
-    ],
-    show_default=True,
-    type=click.Choice(PCWeekdays + [""], case_sensitive=False),
-    help="Week days to add gym trainings.",
-    multiple=True,
-)
-@click.option(
-    "--gym-duration",
-    "-d",
-    "gym_duration",
-    default=30,
-    show_default=True,
-    help="Gym training duration, minutes.",
-    nargs=1,
-)
-@click.option(
-    "--gym-location",
-    "-y",
-    "gym_location",
-    default=GYM_LOCATION_DEFAULT,
-    show_default=True,
-    help="Default gym location.",
-    nargs=1,
-)
-@click.option(
-    "--locations",
-    "-l",
-    "activity_locations",
-    help="Activity regex pattern and location pairs (e.g. 'running=Park,cycling=Bike Path').",
-    multiple=True,
-)
-@click.option(
-    "--force",
-    "-f",
-    "force",
-    is_flag=True,
-    default=False,
-    show_default=True,
-    help=f"Force to add more than {DAY_TO_ADD_WITHOUT_FORCE} days.",
-    nargs=1,
-)
-@click.option(
-    "--version",
-    "version",
-    is_flag=True,
-    default=False,
-    help="Show version.",
-    nargs=1,
-)
-def main(  # pylint: disable=too-many-arguments, too-many-locals
-    sheet: str,
-    gym_weekdays: Tuple[str, ...],
-    gym_duration: int,
-    gym_location: str,
-    activity_locations: Tuple[str, ...],
-    force: bool,
-    version: bool,
-) -> None:
-    """Fill Google sheet with data from Garmin.
-
-    Documentation https://andgineer.github.io/garmin-daily/en/
-    """
-    ctx = click.get_current_context()
-    if version:
-        print(f"{VERSION}")
-        sys.exit(0)
-
-    # Parse activity-location mappings
-    location_mappings = []
-    if activity_locations:
-        try:
-            for pair in activity_locations:
-                pattern, location = pair.split("=", 1)  # Changed from '-' to '='
-                location_mappings.append((pattern, location))
-        except ValueError:
-            print("Invalid locations format. Use: pattern1=location1,pattern2=location2")
-            sys.exit(1)
-
-    gym_location_param = ctx.get_parameter_source("gym_location")
-    is_default_gym_location = gym_location_param is click_core.ParameterSource.DEFAULT
-    try:
-        location_mapper = LocationMapper(location_mappings, gym_location, is_default_gym_location)
-    except ValueError as exc:
-        print(exc)
-        sys.exit(1)
-
-    print(f"garmin-daily {VERSION} is going to add Garmin activities to Google Sheet '{sheet}'")
-    if location_mappings:
-        print("Activity location mappings:")
-        for pattern, location in location_mappings:
-            print(f"  {pattern} -> {location}")
-
-    filtered_gym_weekdays = [day for day in gym_weekdays if day]
-    if (
-        gym_location := location_mapper.get_gym_location()  # type: ignore
-        and filtered_gym_weekdays
-    ):
-        print(
-            f"Auto create '{gym_location}' gym {gym_duration} minutes training "
-            f"on {filtered_gym_weekdays}"
-        )
-
-    fitness, columns = open_google_sheet(sheet)
-
-    start_date, days_to_add = detect_days_to_add(fitness, columns)
-    if days_to_add > DAY_TO_ADD_WITHOUT_FORCE and not force:
-        print(f"\nToo many days to add ({days_to_add}).\nUse --force to confirm.")
-        sys.exit(1)
-
-    if days_to_add:
-        add_rows_from_garmin(
-            fitness=fitness,
-            columns=columns,
-            start_date=start_date,
-            days_to_add=days_to_add,
-            gym_days=[PCWeekdays.index(weekday) for weekday in filtered_gym_weekdays],
-            gym_duration=gym_duration,
-            location_mapper=location_mapper,
-        )
-    else:
-        print(
-            f"Last filled day {start_date}. Nothing to add. Add only full days - up to yesterday."
-        )
 
 
 def add_rows_from_garmin(  # pylint: disable=too-many-arguments, too-many-locals
@@ -253,7 +26,7 @@ def add_rows_from_garmin(  # pylint: disable=too-many-arguments, too-many-locals
     days_to_add: int,
     gym_days: List[int],
     gym_duration: int,
-    location_mapper: LocationMapper,
+    location_mapper: "LocationMapper",
 ) -> None:
     """Add activities from Garmin to the Google Sheet."""
     daily = GarminDaily()
@@ -284,16 +57,6 @@ def add_rows_from_garmin(  # pylint: disable=too-many-arguments, too-many-locals
             fitness.insert_rows(rows, row=2, value_input_option=ValueInputOption.user_entered)
         if batch < batches_num - 1:  # do not pause on last iteration
             time.sleep(API_DELAY)  # pause to prevent robot protection from Garmin API
-
-
-@lru_cache(maxsize=None)
-def fitness_df(fitness: gspread.Worksheet) -> pd.DataFrame:
-    """Load the Google Sheet as Pandas DataFrame.
-
-    Cached so we use it as lazy load - if we do not need it we do not load it.
-    """
-    print("." * 20, " Reading full Google Sheet into memory for quick search ", "." * 20)
-    return pd.DataFrame(fitness.get_all_records()).set_index("Date")
 
 
 def search_missed_steps_in_sheet(
@@ -403,7 +166,7 @@ def create_day_rows(  # pylint: disable=too-many-arguments
     day: date,
     gym_duration: int,
     gym_days: List[int],
-    location_mapper: LocationMapper,
+    location_mapper: "LocationMapper",
 ) -> List[Dict[GarminCol, Optional[Union[str, int, float]]]]:
     """Sheet rows for the day."""
     gday = daily[day]
@@ -476,5 +239,26 @@ def localized_csv_raw(row: List[Optional[Union[str, int, float]]]) -> List[str]:
     return [f"{val:n}" if isinstance(val, float) else str(val) for val in row]
 
 
-if __name__ == "__main__":  # pragma: no cover
-    main()  # pylint: disable=no-value-for-parameter
+@lru_cache(maxsize=None)
+def fitness_df(fitness: gspread.Worksheet) -> pd.DataFrame:
+    """Load the Google Sheet as Pandas DataFrame.
+
+    Cached so we use it as lazy load - if we do not need it we do not load it.
+    """
+    print("." * 20, " Reading full Google Sheet into memory for quick search ", "." * 20)
+    return pd.DataFrame(fitness.get_all_records()).set_index("Date")
+
+
+def sheet_week_day(day: date) -> int:
+    """Weekday number for Google Sheet.
+
+    Monday - 1
+    ...
+    Sunday - 7
+    """
+    return day.weekday() + 1
+
+
+def week_num(day: date) -> int:
+    """Week number for the sheet (starting from some arbitrary date)."""
+    return int(round((day - date(2013, 1, 13)).days / 7))

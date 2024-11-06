@@ -7,13 +7,14 @@ from freezegun import freeze_time
 
 from garmin_daily import Activity
 from garmin_daily.columns_mapper import ColumnsMapper, GarminCol
+from garmin_daily.location_mapper import LocationMapper
 from garmin_daily.google_sheet import (
     BATCH_SIZE,
     add_rows_from_garmin,
     create_day_rows,
     detect_days_to_add,
     open_google_sheet,
-    search_missed_steps_in_sheet, LocationMapper,
+    search_missed_steps_in_sheet,
 )
 
 

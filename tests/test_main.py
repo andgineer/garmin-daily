@@ -3,7 +3,8 @@ from unittest import mock
 
 from click.testing import CliRunner
 
-from garmin_daily.google_sheet import DAY_TO_ADD_WITHOUT_FORCE, SHEET_NAME_DEFAULT, Weekdays, main, LocationMapper
+from garmin_daily.main import DAY_TO_ADD_WITHOUT_FORCE, SHEET_NAME_DEFAULT, Weekdays, main
+from garmin_daily.location_mapper import LocationMapper
 from garmin_daily.version import VERSION
 
 
@@ -28,11 +29,11 @@ def test_main_version():
 def test_too_many_days_to_add():
     runner = CliRunner()
     with mock.patch(
-        "garmin_daily.google_sheet.detect_days_to_add"
+        "garmin_daily.main.detect_days_to_add"
     ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.google_sheet.add_rows_from_garmin"
+        "garmin_daily.main.add_rows_from_garmin"
     ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.google_sheet.open_google_sheet",
+        "garmin_daily.main.open_google_sheet",
         return_value=(mock.MagicMock(), mock.MagicMock()),
     ) as mocked_open_google_sheet:
         mocked_detect_days_to_add.return_value = (
@@ -68,11 +69,11 @@ def test_gym_training_added():
             return f"LocationMapper(mappings={self.mappings}, gym_location='{self.gym_location}')"
 
     with mock.patch(
-        "garmin_daily.google_sheet.detect_days_to_add"
+        "garmin_daily.main.detect_days_to_add"
     ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.google_sheet.add_rows_from_garmin"
+        "garmin_daily.main.add_rows_from_garmin"
     ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.google_sheet.open_google_sheet", return_value=(fitness, columns)
+        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
         result = runner.invoke(
@@ -122,11 +123,11 @@ def test_locations_parameter():
             return f"LocationMapper(mappings={self.mappings}, gym_location='{self.gym_location}')"
 
     with mock.patch(
-            "garmin_daily.google_sheet.detect_days_to_add"
+            "garmin_daily.main.detect_days_to_add"
     ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.google_sheet.add_rows_from_garmin"
+        "garmin_daily.main.add_rows_from_garmin"
     ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.google_sheet.open_google_sheet", return_value=(fitness, columns)
+        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
 
@@ -182,11 +183,11 @@ def test_locations_with_default_gym_days():
             return f"LocationMapper(mappings={self.mappings}, gym_location='{self.gym_location}')"
 
     with mock.patch(
-        "garmin_daily.google_sheet.detect_days_to_add"
+        "garmin_daily.main.detect_days_to_add"
     ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.google_sheet.add_rows_from_garmin"
+        "garmin_daily.main.add_rows_from_garmin"
     ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.google_sheet.open_google_sheet", return_value=(fitness, columns)
+        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
 
@@ -239,11 +240,11 @@ def test_locations_with_gym():
                     self.gym_location == other.gym_location)
 
     with mock.patch(
-            "garmin_daily.google_sheet.detect_days_to_add"
+            "garmin_daily.main.detect_days_to_add"
     ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.google_sheet.add_rows_from_garmin"
+        "garmin_daily.main.add_rows_from_garmin"
     ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.google_sheet.open_google_sheet", return_value=(fitness, columns)
+        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
 
@@ -299,11 +300,11 @@ def test_gym_location_default_ignored():
     days_to_add = DAY_TO_ADD_WITHOUT_FORCE
 
     with mock.patch(
-            "garmin_daily.google_sheet.detect_days_to_add"
+            "garmin_daily.main.detect_days_to_add"
     ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.google_sheet.add_rows_from_garmin"
+        "garmin_daily.main.add_rows_from_garmin"
     ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.google_sheet.open_google_sheet", return_value=(fitness, columns)
+        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
         result = runner.invoke(

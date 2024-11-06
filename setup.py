@@ -36,7 +36,7 @@ setuptools.setup(
     description=("Aggregate data from Garmin Connect daily."),
     entry_points={
         "console_scripts": [
-            "garmin-daily=garmin_daily.google_sheet:main",
+            "garmin-daily=garmin_daily.main:main",
         ],
     },
     long_description=long_description,
