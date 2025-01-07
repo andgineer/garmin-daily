@@ -19,7 +19,7 @@ BATCH_SIZE = 7  # Add days by batches to prevent block grom Garmin API
 API_DELAY = 15  # seconds to wait between batches to prevent robot protection from Garmin API
 
 
-def add_rows_from_garmin(  # pylint: disable=too-many-arguments, too-many-locals
+def add_rows_from_garmin(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
     fitness: gspread.Worksheet,
     columns: ColumnsMapper,
     start_date: date,
@@ -85,7 +85,7 @@ def search_missed_steps_in_sheet(
         ]["Steps"]
         steps = steps[steps != ""]
         steps = steps[steps > 0].values
-        return steps[0] if steps.size > 0 else 0  # type: ignore
+        return steps[0] if steps.size > 0 else 0
 
     for row in rows:
         no_steps_distance = "=0*"

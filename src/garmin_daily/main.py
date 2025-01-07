@@ -96,7 +96,7 @@ GYM_LOCATION_DEFAULT = "No Limit Gym"
     help="Show version.",
     nargs=1,
 )
-def main(  # pylint: disable=too-many-arguments, too-many-locals
+def main(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
     sheet: str,
     gym_weekdays: Tuple[str, ...],
     gym_duration: int,
