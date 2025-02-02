@@ -52,3 +52,21 @@ class LocationMapper:
     def get_gym_location(self) -> Optional[str]:
         """Return configured gym location."""
         return self.gym_location
+
+
+class ActivityMapper:  # pylint: disable=too-few-public-methods
+    """Maps activity names based on regex patterns."""
+
+    def __init__(self, activity_mappings: List[Tuple[str, str]]):
+        """Initialize with list of (pattern, new_name) tuples."""
+        self.mappings = [
+            (re.compile(pattern, re.IGNORECASE), new_name)
+            for pattern, new_name in activity_mappings
+        ]
+
+    def get_activity_name(self, activity: str | None) -> str | None:
+        """Return mapped activity name if pattern matches, otherwise return original."""
+        for pattern, new_name in self.mappings:
+            if isinstance(activity, str) and pattern.search(activity):
+                return new_name
+        return activity

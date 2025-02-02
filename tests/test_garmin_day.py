@@ -44,9 +44,6 @@ def test_detect_sport(garmin_activity_marked):
     assert sport == garmin_activity_marked[1]["sport"]
     assert separate == garmin_activity_marked[1]["separate"]
 
-    activity.activity_type = "-fake-"
-    assert garmin_day.detect_sport(activity) == ("Unknown", True)
-
 
 def test_aggregate_activities(garmin_activities_data):
     api = MagicMock()

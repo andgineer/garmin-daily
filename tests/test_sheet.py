@@ -7,7 +7,7 @@ from freezegun import freeze_time
 
 from garmin_daily import Activity
 from garmin_daily.columns_mapper import ColumnsMapper, GarminCol
-from garmin_daily.location_mapper import LocationMapper
+from garmin_daily.mappers import LocationMapper, ActivityMapper
 from garmin_daily.google_sheet import (
     BATCH_SIZE,
     add_rows_from_garmin,
@@ -80,6 +80,7 @@ def test_create_day_rows(header_row):
     day = date(2023, 1, 1)
     gym_duration = 30
     location_mapper = LocationMapper([("running", "Park")], "fake")
+    activity_mapper = ActivityMapper([])
 
     rows = create_day_rows(
         mock_garmin_daily,
@@ -87,6 +88,7 @@ def test_create_day_rows(header_row):
         gym_duration=gym_duration,
         gym_days=[day.weekday()],
         location_mapper=location_mapper,
+        activity_mapper=activity_mapper,
     )
     print(rows)
     assert rows == [
@@ -199,6 +201,7 @@ def test_add_rows_from_garmin():
     gym_days = [0, 2]
     gym_duration = 31
     location_mapper = LocationMapper([("running", "Park")], "fake")
+    activity_mapper = ActivityMapper([])
 
     with patch("garmin_daily.google_sheet.GarminDaily") as mock_garmin_daily, patch(
         "garmin_daily.google_sheet.create_day_rows"
@@ -218,6 +221,7 @@ def test_add_rows_from_garmin():
                 gym_days=gym_days,
                 gym_duration=gym_duration,
                 location_mapper=location_mapper,
+                activity_mapper=activity_mapper,
             )
         mock_sleep.assert_not_called()
         mock_garmin_daily.assert_called_once()
@@ -234,6 +238,7 @@ def test_add_rows_from_garmin():
         batch_number = 2
         days_to_add = BATCH_SIZE * batch_number + 1
         date_after_last = date(2021, 1, day_of_month + days_to_add)
+        activity_mapper = ActivityMapper([])
         with freeze_time(date_after_last):
             add_rows_from_garmin(
                 fitness=mock_worksheet,
@@ -243,6 +248,7 @@ def test_add_rows_from_garmin():
                 gym_days=gym_days,
                 gym_duration=gym_duration,
                 location_mapper=location_mapper,
+                activity_mapper=activity_mapper,
             )
         assert mock_sleep.call_count == batch_number
         mock_garmin_daily.assert_called_once()

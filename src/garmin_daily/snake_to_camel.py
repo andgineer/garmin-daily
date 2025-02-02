@@ -9,6 +9,28 @@ def snake_to_camel(snake_case_name: str) -> str:
     return words[0].lower() + "".join(word.title() for word in words[1:])
 
 
+def capitalize_words(name: str) -> str:
+    """Capitalize words in a string.
+
+    Replace underscores with spaces and capitalize each word.
+    Split on both spaces and underscores.
+
+    name: Input string with words separated by spaces and/or underscores
+
+    Returns: String with capitalized words separated by spaces
+
+    >>> capitalize_words("hello_world")
+    'Hello World'
+    >>> capitalize_words("hello world")
+    'Hello World'
+    >>> capitalize_words("hello_world example_string")
+    'Hello World Example String'
+    """
+    # First replace underscores with spaces, then split on spaces
+    words = name.replace("_", " ").split()
+    return " ".join(word.capitalize() for word in words)
+
+
 def camel_to_upper_snake(name: str) -> str:
     """Convert camelCase to UPPER_SNAKE_CASE.
 

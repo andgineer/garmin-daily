@@ -59,6 +59,26 @@ garmin_ativities_marked_data = [
             "str": "<Activity(activity_type=cycling, location_name=None, duration=3600, average_hr=170, calories=300, distance=30, elevation_gain=75, max_hr=190, max_speed=None, average_speed=None, start_time=2022-01-03T09:00:00, steps=7500, moving_duration=3500, non_walking_steps=None, sport=None, comment=None>",
         },
     },
+    {
+        "api_responce": {
+            "activityType": {"typeKey": "-fake_fake-"},
+            "duration": 3600,
+            "calories": 250,
+            "distance": 10,
+            "elevationGain": 50,
+            "maxHR": 170,
+            "averageHR": 150,
+            "startTimeLocal": "2022-01-01T09:00:00",
+            "steps": 5000,
+            "movingDuration": 3500,
+        },
+        "test_metadata": {
+            "sport": "-fake Fake-",
+            "separate": False,
+            "estimated_steps": 0,
+            "str": "<Activity(activity_type=-fake_fake-, location_name=None, duration=3600, average_hr=150, calories=250, distance=10, elevation_gain=50, max_hr=170, max_speed=None, average_speed=None, start_time=2022-01-01T09:00:00, steps=5000, moving_duration=3500, non_walking_steps=None, sport=None, comment=None>",
+        },
+    },
 ]
 
 

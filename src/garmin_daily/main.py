@@ -9,7 +9,7 @@ import click.core as click_core
 import rich_click as click
 
 from garmin_daily.google_sheet import add_rows_from_garmin, detect_days_to_add, open_google_sheet
-from garmin_daily.location_mapper import LocationMapper
+from garmin_daily.mappers import ActivityMapper, LocationMapper
 from garmin_daily.version import VERSION
 
 SHEET_NAME_DEFAULT = "05 Fitness"
@@ -75,7 +75,24 @@ GYM_LOCATION_DEFAULT = "No Limit Gym"
     "--locations",
     "-l",
     "activity_locations",
-    help="Activity regex pattern and location pairs (e.g. 'running=Park,cycling=Bike Path').",
+    help=(
+        "Map activity locations using pattern=location pairs "
+        "where pattern is case insensitive regex to match activity "
+        "and location is replacement for location "
+        "(e.g. 'running=Park' will set location to 'Park' for activities matching 'running')."
+    ),
+    multiple=True,
+)
+@click.option(
+    "--rename",
+    "-r",
+    "activity_renames",
+    help=(
+        "Rename activities using pattern=new_name pairs "
+        "where pattern is case insensitive regex to match and new_name is the replacement "
+        "(e.g. 'trail=Roller skiing' will rename activities "
+        "like 'Trail Running' to 'Roller skiing')."
+    ),
     multiple=True,
 )
 @click.option(
@@ -96,12 +113,13 @@ GYM_LOCATION_DEFAULT = "No Limit Gym"
     help="Show version.",
     nargs=1,
 )
-def main(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
+def main(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,too-many-branches
     sheet: str,
     gym_weekdays: Tuple[str, ...],
     gym_duration: int,
     gym_location: str,
     activity_locations: Tuple[str, ...],
+    activity_renames: Tuple[str, ...],
     force: bool,
     version: bool,
 ) -> None:
@@ -125,10 +143,21 @@ def main(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
             print("Invalid locations format. Use: pattern1=location1,pattern2=location2")
             sys.exit(1)
 
+    activity_rename_mappings = []
+    if activity_renames:
+        try:
+            for pair in activity_renames:
+                pattern, new_name = pair.split("=", 1)
+                activity_rename_mappings.append((pattern, new_name))
+        except ValueError:
+            print("Invalid rename format. Use: pattern1=newname1,pattern2=newname2")
+            sys.exit(1)
+
     gym_location_param = ctx.get_parameter_source("gym_location")
     is_default_gym_location = gym_location_param is click_core.ParameterSource.DEFAULT
     try:
         location_mapper = LocationMapper(location_mappings, gym_location, is_default_gym_location)
+        activity_mapper = ActivityMapper(activity_rename_mappings)
     except ValueError as exc:
         print(exc)
         sys.exit(1)
@@ -138,6 +167,10 @@ def main(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
         print("Activity location mappings:")
         for pattern, location in location_mappings:
             print(f"  {pattern} -> {location}")
+    if activity_rename_mappings:
+        print("Activity rename mappings:")
+        for pattern, new_name in activity_rename_mappings:
+            print(f"  {pattern} -> {new_name}")
 
     filtered_gym_weekdays = [day for day in gym_weekdays if day]
     if (
@@ -165,6 +198,7 @@ def main(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
             gym_days=[PCWeekdays.index(weekday) for weekday in filtered_gym_weekdays],
             gym_duration=gym_duration,
             location_mapper=location_mapper,
+            activity_mapper=activity_mapper,
         )
     else:
         print(

@@ -13,7 +13,7 @@ from gspread.utils import ValueInputOption
 
 from garmin_daily import SPORT_STEP_LENGTH_KM, WALKING_SPORT, Activity, GarminDaily
 from garmin_daily.columns_mapper import ColumnsMapper, GarminCol
-from garmin_daily.location_mapper import LocationMapper
+from garmin_daily.mappers import ActivityMapper, LocationMapper
 
 BATCH_SIZE = 7  # Add days by batches to prevent block grom Garmin API
 API_DELAY = 15  # seconds to wait between batches to prevent robot protection from Garmin API
@@ -27,6 +27,7 @@ def add_rows_from_garmin(  # pylint: disable=too-many-arguments,too-many-locals,
     gym_days: List[int],
     gym_duration: int,
     location_mapper: "LocationMapper",
+    activity_mapper: "ActivityMapper",
 ) -> None:
     """Add activities from Garmin to the Google Sheet."""
     daily = GarminDaily()
@@ -47,6 +48,7 @@ def add_rows_from_garmin(  # pylint: disable=too-many-arguments,too-many-locals,
                 gym_duration=gym_duration,
                 gym_days=gym_days,
                 location_mapper=location_mapper,
+                activity_mapper=activity_mapper,
             )
             rows = [
                 localized_csv_raw(columns.map(fields)) for fields in rows_fields  # type: ignore
@@ -161,12 +163,13 @@ def open_google_sheet(sheet: str) -> Tuple[gspread.Worksheet, ColumnsMapper]:
     return worksheet, mapper
 
 
-def create_day_rows(  # pylint: disable=too-many-arguments
+def create_day_rows(  # pylint: disable=too-many-arguments,too-many-positional-arguments
     daily: GarminDaily,
     day: date,
     gym_duration: int,
     gym_days: List[int],
     location_mapper: "LocationMapper",
+    activity_mapper: "ActivityMapper",
 ) -> List[Dict[GarminCol, Optional[Union[str, int, float]]]]:
     """Sheet rows for the day."""
     gday = daily[day]
@@ -183,6 +186,8 @@ def create_day_rows(  # pylint: disable=too-many-arguments
 
     rows_fields: List[Dict[GarminCol, Optional[Union[str, int, float]]]] = []
     for activity in gday.activities:
+        mapped_sport = activity_mapper.get_activity_name(activity.sport)
+
         # Determine location based on activity pattern matching
         activity_location = location_mapper.get_location(
             str(activity.sport), activity.location_name or ""
@@ -191,7 +196,7 @@ def create_day_rows(  # pylint: disable=too-many-arguments
         rows_fields.append(
             {
                 GarminCol.LOCATION: activity_location,
-                GarminCol.SPORT: activity.sport,
+                GarminCol.SPORT: mapped_sport,
                 GarminCol.DURATION: round(activity.duration / 60) if activity.duration else "",
                 GarminCol.DATE: day.strftime("%Y-%m-%d"),
                 GarminCol.DISTANCE: (

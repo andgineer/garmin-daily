@@ -11,7 +11,7 @@ import urllib3.exceptions
 from garminconnect import Garmin, GarminConnectAuthenticationError
 from requests.adapters import HTTPAdapter, Retry
 
-from garmin_daily.snake_to_camel import snake_to_camel
+from garmin_daily.snake_to_camel import capitalize_words, snake_to_camel
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -31,7 +31,6 @@ SPORT_STEP_LENGTH_KM = {
 }
 
 SPORT_DETECTION: Dict[str, Any] = {
-    "running": "Running",
     "elliptical": "Ellipse",
     "cycling": "Bicycle",
     "skate_skiing_ws": {
@@ -40,7 +39,6 @@ SPORT_DETECTION: Dict[str, Any] = {
         ],
         "default": "Roller skiing",
     },
-    "-unknown-": "Unknown",
 }
 
 
@@ -213,14 +211,15 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
         but not the big training one.
         """
         if activity.activity_type not in SPORT_DETECTION:  # pylint: disable=no-member
-            return SPORT_DETECTION["-unknown-"], True
+            sport = capitalize_words(activity.activity_type)
+        else:
+            sport = SPORT_DETECTION[activity.activity_type]
         separate = (
             activity.distance
             and isinstance(activity.distance, (int, float))
             and activity.distance > 8000
             and activity.activity_type == "cycling"
         )
-        sport = SPORT_DETECTION[activity.activity_type]
         if isinstance(sport, dict) and activity.start_time:
             for key, val in sport.items():
                 if isinstance(val, list):
