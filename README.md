@@ -5,13 +5,13 @@
 | Name                                      |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------ | -------: | -------: | ------: | --------: |
 | src/garmin\_daily/columns\_mapper.py      |       25 |        1 |     96% |        75 |
-| src/garmin\_daily/garmin\_aggregations.py |      187 |        2 |     99% |   171-172 |
-| src/garmin\_daily/google\_sheet.py        |      102 |       10 |     90% |56, 105, 152-154, 158-159, 239, 248-249 |
-| src/garmin\_daily/location\_mapper.py     |       23 |        0 |    100% |           |
-| src/garmin\_daily/main.py                 |       60 |        4 |     93% |124-126, 170 |
-| src/garmin\_daily/snake\_to\_camel.py     |        7 |        0 |    100% |           |
+| src/garmin\_daily/garmin\_aggregations.py |      187 |        2 |     99% |   169-170 |
+| src/garmin\_daily/google\_sheet.py        |      103 |       10 |     90% |58, 107, 154-156, 160-161, 244, 253-254 |
+| src/garmin\_daily/main.py                 |       75 |        4 |     95% |142-144, 204 |
+| src/garmin\_daily/mappers.py              |       31 |        0 |    100% |           |
+| src/garmin\_daily/snake\_to\_camel.py     |       10 |        0 |    100% |           |
 | src/garmin\_daily/version.py              |        1 |        0 |    100% |           |
-|                                 **TOTAL** |  **405** |   **17** | **96%** |           |
+|                                 **TOTAL** |  **432** |   **17** | **96%** |           |
 
 
 ## Setup coverage badge
