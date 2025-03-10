@@ -9,3 +9,13 @@ from garmin_daily.garmin_aggregations import (
     GarminDaily,
     GarminDay,
 )
+
+__all__ = [
+    "GarminDaily",
+    "GarminDay",
+    "Activity",
+    "ActivityField",
+    "AggFunc",
+    "WALKING_SPORT",
+    "SPORT_STEP_LENGTH_KM",
+]

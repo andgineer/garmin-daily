@@ -18,8 +18,7 @@ class LocationMapperMatcher:
             return False
         # Compare pattern strings and locations
         actual_mappings = [(p.pattern, l) for p, l in other.mappings]
-        return (actual_mappings == self.mappings and
-                self.gym_location == other.gym_location)
+        return actual_mappings == self.mappings and self.gym_location == other.gym_location
 
     def __repr__(self):
         return f"LocationMapper(mappings={self.mappings}, gym_location='{self.gym_location}')"
@@ -59,14 +58,14 @@ def test_main_version():
 
 def test_too_many_days_to_add():
     runner = CliRunner()
-    with mock.patch(
-        "garmin_daily.main.detect_days_to_add"
-    ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.main.add_rows_from_garmin"
-    ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.main.open_google_sheet",
-        return_value=(mock.MagicMock(), mock.MagicMock()),
-    ) as mocked_open_google_sheet:
+    with (
+        mock.patch("garmin_daily.main.detect_days_to_add") as mocked_detect_days_to_add,
+        mock.patch("garmin_daily.main.add_rows_from_garmin") as mocked_add_rows_from_garmin,
+        mock.patch(
+            "garmin_daily.main.open_google_sheet",
+            return_value=(mock.MagicMock(), mock.MagicMock()),
+        ) as mocked_open_google_sheet,
+    ):
         mocked_detect_days_to_add.return_value = (
             datetime.date(2022, 1, 1),
             DAY_TO_ADD_WITHOUT_FORCE + 1,
@@ -85,22 +84,23 @@ def test_gym_training_added():
     start_date = datetime.date(2022, 1, 1)
     days_to_add = DAY_TO_ADD_WITHOUT_FORCE
 
-
-    with mock.patch(
-        "garmin_daily.main.detect_days_to_add"
-    ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.main.add_rows_from_garmin"
-    ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
+    with (
+        mock.patch("garmin_daily.main.detect_days_to_add") as mocked_detect_days_to_add,
+        mock.patch("garmin_daily.main.add_rows_from_garmin") as mocked_add_rows_from_garmin,
+        mock.patch("garmin_daily.main.open_google_sheet", return_value=(fitness, columns)),
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
         result = runner.invoke(
             main,
             [
-                "-g", "mon",
-                "-g", "Tue",
-                "--gym-duration", duration,
-                "--gym-location", "Gym A",
+                "-g",
+                "mon",
+                "-g",
+                "Tue",
+                "--gym-duration",
+                duration,
+                "--gym-location",
+                "Gym A",
             ],
         )
         expected_mapper = LocationMapperMatcher([], "Gym A")
@@ -126,12 +126,10 @@ def test_locations_parameter():
     start_date = datetime.date(2022, 1, 1)
     days_to_add = DAY_TO_ADD_WITHOUT_FORCE
 
-    with mock.patch(
-            "garmin_daily.main.detect_days_to_add"
-    ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.main.add_rows_from_garmin"
-    ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
+    with (
+        mock.patch("garmin_daily.main.detect_days_to_add") as mocked_detect_days_to_add,
+        mock.patch("garmin_daily.main.add_rows_from_garmin") as mocked_add_rows_from_garmin,
+        mock.patch("garmin_daily.main.open_google_sheet", return_value=(fitness, columns)),
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
 
@@ -139,19 +137,22 @@ def test_locations_parameter():
         result = runner.invoke(
             main,
             [
-                "--locations", "running=Park",
-                "--locations", "cycling=Track",
-                "--gym-location", "Gym A",
-                "--gym-day", "",  # Override default gym days with empty value
+                "--locations",
+                "running=Park",
+                "--locations",
+                "cycling=Track",
+                "--gym-location",
+                "Gym A",
+                "--gym-day",
+                "",  # Override default gym days with empty value
             ],
-            catch_exceptions=False
+            catch_exceptions=False,
         )
 
         assert result.exit_code == 0, f"Command failed with output: {result.output}"
 
         expected_mapper = LocationMapperMatcher(
-            [("running", "Park"), ("cycling", "Track")],
-            "Gym A"
+            [("running", "Park"), ("cycling", "Track")], "Gym A"
         )
         activity_mapper = ActivityMapperMatcher([])
         mocked_add_rows_from_garmin.assert_called_with(
@@ -165,6 +166,7 @@ def test_locations_parameter():
             activity_mapper=activity_mapper,
         )
 
+
 def test_locations_with_default_gym_days():
     """Test locations parameter with default gym days."""
     runner = CliRunner()
@@ -173,13 +175,10 @@ def test_locations_with_default_gym_days():
     start_date = datetime.date(2022, 1, 1)
     days_to_add = DAY_TO_ADD_WITHOUT_FORCE
 
-
-    with mock.patch(
-        "garmin_daily.main.detect_days_to_add"
-    ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.main.add_rows_from_garmin"
-    ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
+    with (
+        mock.patch("garmin_daily.main.detect_days_to_add") as mocked_detect_days_to_add,
+        mock.patch("garmin_daily.main.add_rows_from_garmin") as mocked_add_rows_from_garmin,
+        mock.patch("garmin_daily.main.open_google_sheet", return_value=(fitness, columns)),
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
 
@@ -187,19 +186,20 @@ def test_locations_with_default_gym_days():
         result = runner.invoke(
             main,
             [
-                "--locations", "running=Park",
-                "--locations", "cycling=Track",
+                "--locations",
+                "running=Park",
+                "--locations",
+                "cycling=Track",
                 "--gym-location",
                 "Gym A",
             ],
-            catch_exceptions=False
+            catch_exceptions=False,
         )
 
         assert result.exit_code == 0, f"Command failed with output: {result.output}"
 
         expected_mapper = LocationMapperMatcher(
-            [("running", "Park"), ("cycling", "Track")],
-            "Gym A"
+            [("running", "Park"), ("cycling", "Track")], "Gym A"
         )
         activity_mapper = ActivityMapperMatcher([])
         # Default gym days are Monday, Tuesday, Friday (0, 1, 4)
@@ -214,6 +214,7 @@ def test_locations_with_default_gym_days():
             activity_mapper=activity_mapper,
         )
 
+
 def test_locations_with_gym():
     runner = CliRunner()
     fitness = mock.MagicMock()
@@ -221,12 +222,10 @@ def test_locations_with_gym():
     start_date = datetime.date(2022, 1, 1)
     days_to_add = DAY_TO_ADD_WITHOUT_FORCE
 
-    with mock.patch(
-            "garmin_daily.main.detect_days_to_add"
-    ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.main.add_rows_from_garmin"
-    ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
+    with (
+        mock.patch("garmin_daily.main.detect_days_to_add") as mocked_detect_days_to_add,
+        mock.patch("garmin_daily.main.add_rows_from_garmin") as mocked_add_rows_from_garmin,
+        mock.patch("garmin_daily.main.open_google_sheet", return_value=(fitness, columns)),
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
 
@@ -234,16 +233,18 @@ def test_locations_with_gym():
         result = runner.invoke(
             main,
             [
-                "--locations", "running=Park",
-                "--locations", "gym=Special Gym",
-                "--gym-day", "",
+                "--locations",
+                "running=Park",
+                "--locations",
+                "gym=Special Gym",
+                "--gym-day",
+                "",
             ],
         )
         assert result.exit_code == 0, f"Command failed with output: {result.output}"
 
         expected_mapper = LocationMapperMatcher(
-            [("running", "Park"), ("gym", "Special Gym")],
-            "Special Gym"
+            [("running", "Park"), ("gym", "Special Gym")], "Special Gym"
         )
         expected_activity_mapper = ActivityMapperMatcher([])
         mocked_add_rows_from_garmin.assert_called_with(
@@ -264,9 +265,12 @@ def test_locations_gym_conflict():
     result = runner.invoke(
         main,
         [
-            "--locations", "running=Park",
-            "--locations", "gym=Special Gym",
-            "--gym-location", "Another Gym",
+            "--locations",
+            "running=Park",
+            "--locations",
+            "gym=Special Gym",
+            "--gym-location",
+            "Another Gym",
         ],
     )
     assert result.exit_code == 1
@@ -283,22 +287,22 @@ def test_gym_location_default_ignored():
     start_date = datetime.date(2022, 1, 1)
     days_to_add = DAY_TO_ADD_WITHOUT_FORCE
 
-    with mock.patch(
-            "garmin_daily.main.detect_days_to_add"
-    ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.main.add_rows_from_garmin"
-    ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
+    with (
+        mock.patch("garmin_daily.main.detect_days_to_add") as mocked_detect_days_to_add,
+        mock.patch("garmin_daily.main.add_rows_from_garmin") as mocked_add_rows_from_garmin,
+        mock.patch("garmin_daily.main.open_google_sheet", return_value=(fitness, columns)),
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
         result = runner.invoke(
             main,
             [
-                "--locations", "running=Park",
-                "--locations", "gym=Special Gym",
+                "--locations",
+                "running=Park",
+                "--locations",
+                "gym=Special Gym",
                 # Not specifying --gym-location should use default "No Limit Gym"
                 # but it should be ignored because gym is in locations
-            ]
+            ],
         )
     assert result.exit_code == 0
     assert "Special Gym" in result.output
@@ -313,13 +317,10 @@ def test_rename_parameter():
     start_date = datetime.date(2022, 1, 1)
     days_to_add = DAY_TO_ADD_WITHOUT_FORCE
 
-
-    with mock.patch(
-            "garmin_daily.main.detect_days_to_add"
-    ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.main.add_rows_from_garmin"
-    ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
+    with (
+        mock.patch("garmin_daily.main.detect_days_to_add") as mocked_detect_days_to_add,
+        mock.patch("garmin_daily.main.add_rows_from_garmin") as mocked_add_rows_from_garmin,
+        mock.patch("garmin_daily.main.open_google_sheet", return_value=(fitness, columns)),
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
 
@@ -327,19 +328,21 @@ def test_rename_parameter():
         result = runner.invoke(
             main,
             [
-                "--rename", "trail=Roller skiing",
-                "--rename", "running=Jogging",
-                "--gym-day", "",  # Override default gym days
+                "--rename",
+                "trail=Roller skiing",
+                "--rename",
+                "running=Jogging",
+                "--gym-day",
+                "",  # Override default gym days
             ],
-            catch_exceptions=False
+            catch_exceptions=False,
         )
 
         assert result.exit_code == 0, f"Command failed with output: {result.output}"
 
-        expected_activity_mapper = ActivityMapperMatcher([
-            ("trail", "Roller skiing"),
-            ("running", "Jogging")
-        ])
+        expected_activity_mapper = ActivityMapperMatcher(
+            [("trail", "Roller skiing"), ("running", "Jogging")]
+        )
 
         mocked_add_rows_from_garmin.assert_called_with(
             fitness=fitness,
@@ -349,7 +352,7 @@ def test_rename_parameter():
             gym_days=[],
             gym_duration=30,
             location_mapper=mock.ANY,  # We don't care about location mapper in this test
-            activity_mapper=expected_activity_mapper
+            activity_mapper=expected_activity_mapper,
         )
 
 
@@ -358,7 +361,7 @@ def test_rename_invalid_format():
     runner = CliRunner()
     result = runner.invoke(
         main,
-        ["--rename", "invalid-format"]  # Missing '=' separator
+        ["--rename", "invalid-format"],  # Missing '=' separator
     )
     assert result.exit_code == 1
     assert "Invalid rename format" in result.output
@@ -372,23 +375,24 @@ def test_rename_with_locations():
     start_date = datetime.date(2022, 1, 1)
     days_to_add = DAY_TO_ADD_WITHOUT_FORCE
 
-    with mock.patch(
-            "garmin_daily.main.detect_days_to_add"
-    ) as mocked_detect_days_to_add, mock.patch(
-        "garmin_daily.main.add_rows_from_garmin"
-    ) as mocked_add_rows_from_garmin, mock.patch(
-        "garmin_daily.main.open_google_sheet", return_value=(fitness, columns)
+    with (
+        mock.patch("garmin_daily.main.detect_days_to_add") as mocked_detect_days_to_add,
+        mock.patch("garmin_daily.main.add_rows_from_garmin") as mocked_add_rows_from_garmin,
+        mock.patch("garmin_daily.main.open_google_sheet", return_value=(fitness, columns)),
     ):
         mocked_detect_days_to_add.return_value = (start_date, days_to_add)
 
         result = runner.invoke(
             main,
             [
-                "--rename", "trail=Roller skiing",
-                "--locations", "running=Park",
-                "--gym-day", "",
+                "--rename",
+                "trail=Roller skiing",
+                "--locations",
+                "running=Park",
+                "--gym-day",
+                "",
             ],
-            catch_exceptions=False
+            catch_exceptions=False,
         )
 
         assert result.exit_code == 0
@@ -400,5 +404,5 @@ def test_rename_with_locations():
 
         # Verify both mappers were used in the call
         call_kwargs = mocked_add_rows_from_garmin.call_args[1]
-        assert isinstance(call_kwargs['activity_mapper'], ActivityMapper)
-        assert isinstance(call_kwargs['location_mapper'], LocationMapper)
+        assert isinstance(call_kwargs["activity_mapper"], ActivityMapper)
+        assert isinstance(call_kwargs["location_mapper"], LocationMapper)

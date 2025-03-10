@@ -173,9 +173,11 @@ def test_create_day_rows(header_row):
 def test_open_google_sheet():
     sheet_name = "-fake-"
     header_row = ("fake1,fake2",)
-    with patch("garmin_daily.google_sheet.gspread") as mock_gspread, patch(
-        "garmin_daily.google_sheet.locale"
-    ) as mock_locale, patch("garmin_daily.google_sheet.ColumnsMapper") as mock_mapper:
+    with (
+        patch("garmin_daily.google_sheet.gspread") as mock_gspread,
+        patch("garmin_daily.google_sheet.locale") as mock_locale,
+        patch("garmin_daily.google_sheet.ColumnsMapper") as mock_mapper,
+    ):
         mock_session = MagicMock()
         mock_spreadsheet = MagicMock()
         mock_worksheet = MagicMock()
@@ -203,15 +205,15 @@ def test_add_rows_from_garmin():
     location_mapper = LocationMapper([("running", "Park")], "fake")
     activity_mapper = ActivityMapper([])
 
-    with patch("garmin_daily.google_sheet.GarminDaily") as mock_garmin_daily, patch(
-        "garmin_daily.google_sheet.create_day_rows"
-    ) as mock_create_day_rows, patch(
-        "garmin_daily.google_sheet.search_missed_steps_in_sheet"
-    ) as mock_search_missed_steps_in_sheet, patch(
-        "garmin_daily.google_sheet.time.sleep"
-    ) as mock_sleep, patch(
-        "garmin_daily.google_sheet.fitness_df"
-    ) as mock_fitness_df:
+    with (
+        patch("garmin_daily.google_sheet.GarminDaily") as mock_garmin_daily,
+        patch("garmin_daily.google_sheet.create_day_rows") as mock_create_day_rows,
+        patch(
+            "garmin_daily.google_sheet.search_missed_steps_in_sheet"
+        ) as mock_search_missed_steps_in_sheet,
+        patch("garmin_daily.google_sheet.time.sleep") as mock_sleep,
+        patch("garmin_daily.google_sheet.fitness_df") as mock_fitness_df,
+    ):
         with freeze_time(date_after_last):
             add_rows_from_garmin(
                 fitness=mock_worksheet,
@@ -319,18 +321,12 @@ def test_location_mapper_conflicts():
 
     # Test multiple gym patterns in locations
     with pytest.raises(ValueError) as exc:
-        LocationMapper([
-            ("gym", "Gym 1"),
-            ("gym.*exercise", "Gym 2")
-        ], None)
+        LocationMapper([("gym", "Gym 1"), ("gym.*exercise", "Gym 2")], None)
     assert "Gym location defined multiple times" in str(exc.value)
 
     # Test case insensitive gym pattern detection
     with pytest.raises(ValueError) as exc:
-        LocationMapper([
-            ("GYM", "Gym 1"),
-            ("Gym", "Gym 2")
-        ], None)
+        LocationMapper([("GYM", "Gym 1"), ("Gym", "Gym 2")], None)
     assert "Gym location defined multiple times" in str(exc.value)
 
     # Make sure single gym location works
@@ -341,6 +337,7 @@ def test_location_mapper_conflicts():
     except ValueError:
         pytest.fail("LocationMapper raised ValueError unexpectedly with single gym location")
 
+
 def test_location_mapper_empty():
     # Test empty mappings
     mapper = LocationMapper([], None)
@@ -350,11 +347,14 @@ def test_location_mapper_empty():
 
 def test_location_mapper_pattern_matching():
     # Test pattern matching with regex
-    mapper = LocationMapper([
-        (r"run.*park", "Central Park"),
-        (r"cycle|bike", "Bike Track"),
-        (r"swim.*pool", "Swimming Pool")
-    ], None)
+    mapper = LocationMapper(
+        [
+            (r"run.*park", "Central Park"),
+            (r"cycle|bike", "Bike Track"),
+            (r"swim.*pool", "Swimming Pool"),
+        ],
+        None,
+    )
 
     assert mapper.get_location("run in park", "orig") == "Central Park"
     assert mapper.get_location("running through park", "orig") == "Central Park"

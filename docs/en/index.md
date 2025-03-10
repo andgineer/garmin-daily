@@ -5,7 +5,7 @@ Fill Google Sheets with fitness data from Garmin Connect.
 ![garmin-daily.png](garmin-daily.png)
 
 ## Installation
-Install using [`pipx`](https://pypa.github.io/pipx/) for isolated environments, which prevents interference 
+Install using [`pipx`](https://pypa.github.io/pipx/) for isolated environments, which prevents interference
 with your system's Python packages:
 
 === "MacOS"
@@ -43,10 +43,10 @@ garmin-daily --sheet "My Fitness"
 ```
 
 ### Advanced Usage
-The app can also help create your gym schedule based on your workout days. 
+The app can also help create your gym schedule based on your workout days.
 It's often easier to edit existing rows than to create new ones from scratch.
 
-To list the weekdays when you have gym training, specify your gym location, 
+To list the weekdays when you have gym training, specify your gym location,
 and set the usual training duration, use:
 ```bash
 garmin-daily --sheet "My Fitness" \

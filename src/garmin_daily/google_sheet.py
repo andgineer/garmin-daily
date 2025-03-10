@@ -4,8 +4,8 @@ import locale
 import sys
 import time
 from datetime import date, datetime, timedelta
-from functools import lru_cache
-from typing import Dict, List, Optional, Tuple, Union
+from functools import cache
+from typing import Optional, Union
 
 import gspread
 import pandas as pd
@@ -19,12 +19,12 @@ BATCH_SIZE = 7  # Add days by batches to prevent block grom Garmin API
 API_DELAY = 15  # seconds to wait between batches to prevent robot protection from Garmin API
 
 
-def add_rows_from_garmin(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments
+def add_rows_from_garmin(  # noqa: PLR0913
     fitness: gspread.Worksheet,
     columns: ColumnsMapper,
     start_date: date,
     days_to_add: int,
-    gym_days: List[int],
+    gym_days: list[int],
     gym_duration: int,
     location_mapper: "LocationMapper",
     activity_mapper: "ActivityMapper",
@@ -51,7 +51,8 @@ def add_rows_from_garmin(  # pylint: disable=too-many-arguments,too-many-locals,
                 activity_mapper=activity_mapper,
             )
             rows = [
-                localized_csv_raw(columns.map(fields)) for fields in rows_fields  # type: ignore
+                localized_csv_raw(columns.map(fields))
+                for fields in rows_fields  # type: ignore
             ]
             search_missed_steps_in_sheet(fitness, rows, columns)
             for row in rows:
@@ -63,7 +64,7 @@ def add_rows_from_garmin(  # pylint: disable=too-many-arguments,too-many-locals,
 
 def search_missed_steps_in_sheet(
     fitness: gspread.Worksheet,
-    rows: List[List[str]],
+    rows: list[list[str]],
     columns: ColumnsMapper,
 ) -> None:
     """Add missed in Garmin API steps data from earlier entered in the spreadsheet.
@@ -82,9 +83,7 @@ def search_missed_steps_in_sheet(
 
     def get_steps(day: str) -> int:
         """Get steps for the date like '2022-02-16'."""
-        steps = fitness_df(fitness)[  # pylint: disable=unsubscriptable-object
-            (fitness_df(fitness).index == day)
-        ]["Steps"]
+        steps = fitness_df(fitness)[(fitness_df(fitness).index == day)]["Steps"]
         steps = steps[steps != ""]
         steps = steps[steps > 0].values
         return steps[0] if steps.size > 0 else 0
@@ -99,7 +98,7 @@ def search_missed_steps_in_sheet(
             if row[columns.idx(GarminCol.STEPS)].startswith(steps_correction):
                 manually_entered_steps = (
                     f"{manually_entered_steps}"
-                    f"{row[columns.idx(GarminCol.STEPS)][len(steps_correction):]}"
+                    f"{row[columns.idx(GarminCol.STEPS)][len(steps_correction) :]}"
                 )
                 row[columns.idx(GarminCol.STEPS)] = f"={manually_entered_steps}"
             else:
@@ -107,11 +106,11 @@ def search_missed_steps_in_sheet(
                 row[columns.idx(GarminCol.STEPS)] = manually_entered_steps
             row[columns.idx(GarminCol.DISTANCE)] = (
                 f"=({manually_entered_steps})*"
-                f"{row[columns.idx(GarminCol.DISTANCE)][len(no_steps_distance):]}"
+                f"{row[columns.idx(GarminCol.DISTANCE)][len(no_steps_distance) :]}"
             )
 
 
-def detect_days_to_add(fitness: gspread.Worksheet, columns: ColumnsMapper) -> Tuple[date, int]:
+def detect_days_to_add(fitness: gspread.Worksheet, columns: ColumnsMapper) -> tuple[date, int]:
     """Get last filled date and calculate number of days to add till today.
 
     Returns (start_date, days_to_add)
@@ -122,7 +121,7 @@ def detect_days_to_add(fitness: gspread.Worksheet, columns: ColumnsMapper) -> Tu
     if not date_cell:
         print(
             f"\nCannot find last filled date in Google Sheet '{sheet_name}'.'{fitness.title}'"
-            f", cell {columns[GarminCol.DATE]}{first_data_row}"
+            f", cell {columns[GarminCol.DATE]}{first_data_row}",
         )
         sys.exit(1)
     try:
@@ -130,7 +129,7 @@ def detect_days_to_add(fitness: gspread.Worksheet, columns: ColumnsMapper) -> Tu
     except ValueError as exc:
         print(
             f"\nWrong date string in Google Sheet '{sheet_name}'.'{fitness.title}', "
-            f"cell {columns[GarminCol.DATE]}{first_data_row}:\n{exc}"
+            f"cell {columns[GarminCol.DATE]}{first_data_row}:\n{exc}",
         )
         sys.exit(1)
     print("Last filled date", last_date)
@@ -141,7 +140,7 @@ def detect_days_to_add(fitness: gspread.Worksheet, columns: ColumnsMapper) -> Tu
     return start_date, days_to_add
 
 
-def open_google_sheet(sheet: str) -> Tuple[gspread.Worksheet, ColumnsMapper]:
+def open_google_sheet(sheet: str) -> tuple[gspread.Worksheet, ColumnsMapper]:
     """Open Google Sheet.
 
     Return worksheet and columns map.
@@ -157,20 +156,20 @@ def open_google_sheet(sheet: str) -> Tuple[gspread.Worksheet, ColumnsMapper]:
     spreadsheet_locale = spreadsheet.locale
     try:
         locale.setlocale(locale.LC_NUMERIC, spreadsheet_locale)
-    except Exception as exc:  # pylint: disable=broad-except
+    except Exception as exc:  # noqa: BLE001
         print(f"Error using the spreadsheet locale '{spreadsheet_locale}':\n{exc}")
     mapper = ColumnsMapper(worksheet.get("A1:M1")[0])
     return worksheet, mapper
 
 
-def create_day_rows(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def create_day_rows(  # noqa: PLR0913
     daily: GarminDaily,
     day: date,
     gym_duration: int,
-    gym_days: List[int],
+    gym_days: list[int],
     location_mapper: "LocationMapper",
     activity_mapper: "ActivityMapper",
-) -> List[Dict[GarminCol, Optional[Union[str, int, float]]]]:
+) -> list[dict[GarminCol, Optional[Union[str, int, float]]]]:
     """Sheet rows for the day."""
     gday = daily[day]
     if day.weekday() in gym_days:
@@ -181,16 +180,17 @@ def create_day_rows(  # pylint: disable=too-many-arguments,too-many-positional-a
                 duration=gym_duration * 60,
                 location_name=location_mapper.get_gym_location(),  # type: ignore
                 comment="",
-            )
+            ),
         )
 
-    rows_fields: List[Dict[GarminCol, Optional[Union[str, int, float]]]] = []
+    rows_fields: list[dict[GarminCol, Optional[Union[str, int, float]]]] = []
     for activity in gday.activities:
         mapped_sport = activity_mapper.get_activity_name(activity.sport)
 
         # Determine location based on activity pattern matching
         activity_location = location_mapper.get_location(
-            str(activity.sport), activity.location_name or ""
+            str(activity.sport),
+            activity.location_name or "",
         )
 
         rows_fields.append(
@@ -215,7 +215,9 @@ def create_day_rows(  # pylint: disable=too-many-arguments,too-many-positional-a
                 GarminCol.STEPS: (
                     f"={activity.steps}-{activity.non_walking_steps}"
                     if activity.non_walking_steps
-                    else f"={activity.steps}" if activity.sport == WALKING_SPORT else ""
+                    else f"={activity.steps}"
+                    if activity.sport == WALKING_SPORT
+                    else ""
                 ),
                 GarminCol.COMMENT: activity.comment,
                 GarminCol.WEEK: week_num(day),
@@ -234,17 +236,17 @@ def create_day_rows(  # pylint: disable=too-many-arguments,too-many-positional-a
                 GarminCol.VO2_MAX: (
                     gday.vo2max if activity.sport == WALKING_SPORT and gday.vo2max else ""
                 ),
-            }
+            },
         )
     return rows_fields
 
 
-def localized_csv_raw(row: List[Optional[Union[str, int, float]]]) -> List[str]:
+def localized_csv_raw(row: list[Optional[Union[str, int, float]]]) -> list[str]:
     """Convert fields to the Google Sheet locale specific string representation."""
     return [f"{val:n}" if isinstance(val, float) else str(val) for val in row]
 
 
-@lru_cache(maxsize=None)
+@cache
 def fitness_df(fitness: gspread.Worksheet) -> pd.DataFrame:
     """Load the Google Sheet as Pandas DataFrame.
 

@@ -5,7 +5,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
-from typing import Annotated, Any, Callable, Dict, List, Optional, Tuple, Union, get_type_hints
+from typing import Annotated, Any, Callable, Optional, Union, get_type_hints
 
 import urllib3.exceptions
 from garminconnect import Garmin, GarminConnectAuthenticationError
@@ -30,7 +30,7 @@ SPORT_STEP_LENGTH_KM = {
     WALKING_SPORT: 0.00085,  # experimentally 0.14 km/min = 8.5 km/h
 }
 
-SPORT_DETECTION: Dict[str, Any] = {
+SPORT_DETECTION: dict[str, Any] = {
     "elliptical": "Ellipse",
     "cycling": "Bicycle",
     "skate_skiing_ws": {
@@ -66,11 +66,12 @@ ACTIVITY_PATH_DELIMITER = "/"
 
 
 @dataclass
-class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-attributes
+class Activity:
     """Garmin activity."""
 
     activity_type: Annotated[
-        str, ActivityField(f"activityType{ACTIVITY_PATH_DELIMITER}typeKey", AggFunc.FIRST)
+        str,
+        ActivityField(f"activityType{ACTIVITY_PATH_DELIMITER}typeKey", AggFunc.FIRST),
     ]
     location_name: Annotated[str, ActivityField("", AggFunc.FIRST)]
     duration: Annotated[Optional[float], ActivityField("", AggFunc.SUM)]  # float seconds
@@ -94,10 +95,10 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
     comment: Annotated[Optional[str], ActivityField(None, AggFunc.FIRST)] = None
 
     @classmethod
-    def init_from_garmin_activity(cls, garmin_activity: Dict[str, Any]) -> "Activity":
+    def init_from_garmin_activity(cls, garmin_activity: dict[str, Any]) -> "Activity":
         """Create Activity object from Garmin Connect activity fields."""
         fields = {}
-        descr: Dict[str, ActivityField] = {
+        descr: dict[str, ActivityField] = {
             field: get_type_hints(Activity, include_extras=True)[field].__metadata__[0]
             for field in get_type_hints(Activity, include_extras=True)
         }
@@ -107,13 +108,12 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
                 continue
             if field_path == "":
                 field_path = snake_to_camel(field_name)
-            if ACTIVITY_PATH_DELIMITER in field_path:
+            if field_path and ACTIVITY_PATH_DELIMITER in field_path:
                 # process one level only for simplicity
-                val = garmin_activity[field_path.split(ACTIVITY_PATH_DELIMITER)[0]][
-                    field_path.split(ACTIVITY_PATH_DELIMITER)[1]
-                ]
+                path_parts = field_path.split(ACTIVITY_PATH_DELIMITER)
+                val = garmin_activity[path_parts[0]][path_parts[1]]
             else:
-                val = garmin_activity.get(field_path)
+                val = garmin_activity.get(field_path) if field_path else None
             fields[field_name] = val
         return Activity(**fields)
 
@@ -141,7 +141,7 @@ class Activity:  # pylint: disable=too-few-public-methods, too-many-instance-att
         )
 
 
-class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-attributes
+class GarminDay:
     """Aggregate one day Garmin data."""
 
     def __init__(self, api: Garmin, day: date) -> None:
@@ -166,10 +166,10 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
             return self.api.get_training_status(self.date_str)["mostRecentVO2Max"][  # type: ignore
                 "generic"
             ]["vo2MaxValue"]
-        except Exception:  # pylint: disable=broad-except
+        except Exception:  # noqa: BLE001
             return 0.0
 
-    def get_hr(self) -> Tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
+    def get_hr(self) -> tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
         """Set HR attrs.
 
         Returns (min, max, average, rest)
@@ -187,7 +187,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
             hr_average = None
         return hr_min, hr_max, hr_average, hr_rest
 
-    def get_sleep(self) -> Tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
+    def get_sleep(self) -> tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
         """Set sleep attrs.
 
         Returns (total, deep, light, REM)
@@ -201,7 +201,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
         sleep_rem_time = sleep_data["dailySleepDTO"]["remSleepSeconds"] // 60 / 60
         return sleep_time, sleep_deep_time, sleep_light_time, sleep_rem_time
 
-    def detect_sport(self, activity: Activity) -> Tuple[str, bool]:
+    def detect_sport(self, activity: Activity) -> tuple[str, bool]:
         """Detect sport.
 
         Return (sport, separate)
@@ -210,14 +210,15 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
         For example we would like to aggregate all small bicycle trips
         but not the big training one.
         """
-        if activity.activity_type not in SPORT_DETECTION:  # pylint: disable=no-member
+        if activity.activity_type not in SPORT_DETECTION:
             sport = capitalize_words(activity.activity_type)
         else:
             sport = SPORT_DETECTION[activity.activity_type]
+        long_distance = 8000
         separate = (
             activity.distance
             and isinstance(activity.distance, (int, float))
-            and activity.distance > 8000
+            and activity.distance > long_distance
             and activity.activity_type == "cycling"
         )
         if isinstance(sport, dict) and activity.start_time:
@@ -242,28 +243,28 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
         steps_data = self.api.get_steps_data(self.date_str)
         return sum(steps["steps"] for steps in steps_data)
 
-    def get_activities(self) -> List[Dict[str, Any]]:
+    def get_activities(self) -> list[dict[str, Any]]:
         """Get activities."""
         return self.api.get_activities_by_date(self.date_str, self.date_str, "")  # type: ignore
 
-    def aggregate_activities(self) -> List[Activity]:
+    def aggregate_activities(self) -> list[Activity]:
         """Aggregate activities with same name and nearly same intensity."""
         garmin_activities = self.get_activities()
-        activities: Dict[str, List[Activity]] = defaultdict(list)
+        activities: dict[str, list[Activity]] = defaultdict(list)
         for garmin_activity in garmin_activities:
             activity = Activity.init_from_garmin_activity(garmin_activity)
             sport, separate = self.detect_sport(activity)
             if separate:  # do not aggregate
                 sport = f"{sport}{SPORT_UNIQUENESS}{activity.start_time}"
             activities[sport].append(activity)
-        aggregated: Dict[str, Activity] = {
+        aggregated: dict[str, Activity] = {
             activity_name: self.aggregate_activity(activity_name, activity_list)
             for activity_name, activity_list in activities.items()
         }
         aggregated[WALKING_SPORT] = self.aggregate_walking_activity(aggregated)
         return list(aggregated.values())
 
-    def aggregate_walking_activity(self, activities: Dict[str, Activity]) -> Activity:
+    def aggregate_walking_activity(self, activities: dict[str, Activity]) -> Activity:
         """Aggregate full day walking into single activity."""
         return Activity(
             activity_type=WALKING_SPORT,
@@ -320,9 +321,9 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
         return " ".join(result)
 
     @staticmethod
-    def aggregate_activity(activity_name: str, activity_list: List[Activity]) -> Activity:
+    def aggregate_activity(activity_name: str, activity_list: list[Activity]) -> Activity:
         """Aggregate the list of activities into one accumulative activity."""
-        descr: Dict[str, ActivityField] = {
+        descr: dict[str, ActivityField] = {
             field: get_type_hints(Activity, include_extras=True)[field].__metadata__[0]
             for field in get_type_hints(Activity, include_extras=True)
         }
@@ -351,7 +352,9 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
 
     @staticmethod
     def aggregate_field(
-        activity_list: List[Activity], field_decr: ActivityField, field_name: str
+        activity_list: list[Activity],
+        field_decr: ActivityField,
+        field_name: str,
     ) -> Optional[Union[int, float, str]]:
         """Aggregate field_name according to field_descr."""
         if field_decr.aggregate in [AggFunc.MIN, AggFunc.MAX, AggFunc.SUM]:
@@ -360,7 +363,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
             )
         if field_decr.aggregate == AggFunc.FIRST:
             return getattr(activity_list[0], field_name)  # type: ignore
-        if field_decr.aggregate == AggFunc.AVERAGE:
+        if field_decr.aggregate == AggFunc.AVERAGE:  # noqa: SIM102
             if num := sum(1 for activity in activity_list if getattr(activity, field_name)):
                 return (  # type: ignore
                     sum(
@@ -373,7 +376,7 @@ class GarminDay:  # pylint: disable=too-few-public-methods, too-many-instance-at
         return None
 
 
-class GarminDaily:  # pylint: disable=too-few-public-methods
+class GarminDaily:
     """Aggregate activities daily."""
 
     def __init__(self) -> None:
@@ -386,8 +389,9 @@ class GarminDaily:  # pylint: disable=too-few-public-methods
             backoff_factor=3,  # retry in [0, 6, 12, 24, 48] seconds
             status_forcelist=[403],
         )
-        self.api.garth.sess.mount(  # pylint: disable=no-member
-            "https://", HTTPAdapter(max_retries=retries)
+        self.api.garth.sess.mount(
+            "https://",
+            HTTPAdapter(max_retries=retries),
         )
 
     def login(self) -> None:  # pragma: no cover
@@ -397,7 +401,7 @@ class GarminDaily:  # pylint: disable=too-few-public-methods
         except GarminConnectAuthenticationError as exc:
             raise ValueError(
                 "Wrong Garmin Connect login or password. "
-                "Check environment vars `GARMIN_EMAIL` and `GARMIN_PASSWORD`."
+                "Check environment vars `GARMIN_EMAIL` and `GARMIN_PASSWORD`.",
             ) from exc
         except Exception as exc:
             # Raising a SystemError with the original stack trace and error message

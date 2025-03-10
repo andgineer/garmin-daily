@@ -3,7 +3,6 @@
 import sys
 from datetime import date
 from enum import IntEnum
-from typing import Tuple
 
 import click.core as click_core
 import rich_click as click
@@ -113,13 +112,13 @@ GYM_LOCATION_DEFAULT = "No Limit Gym"
     help="Show version.",
     nargs=1,
 )
-def main(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positional-arguments,too-many-branches
+def main(  # noqa: C901,PLR0913,PLR0912
     sheet: str,
-    gym_weekdays: Tuple[str, ...],
+    gym_weekdays: tuple[str, ...],
     gym_duration: int,
     gym_location: str,
-    activity_locations: Tuple[str, ...],
-    activity_renames: Tuple[str, ...],
+    activity_locations: tuple[str, ...],
+    activity_renames: tuple[str, ...],
     force: bool,
     version: bool,
 ) -> None:
@@ -179,7 +178,7 @@ def main(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
     ):
         print(
             f"Auto create '{gym_location}' gym {gym_duration} minutes training "
-            f"on {filtered_gym_weekdays}"
+            f"on {filtered_gym_weekdays}",
         )
 
     fitness, columns = open_google_sheet(sheet)
@@ -202,9 +201,9 @@ def main(  # pylint: disable=too-many-arguments,too-many-locals,too-many-positio
         )
     else:
         print(
-            f"Last filled day {start_date}. Nothing to add. Add only full days - up to yesterday."
+            f"Last filled day {start_date}. Nothing to add. Add only full days - up to yesterday.",
         )
 
 
 if __name__ == "__main__":  # pragma: no cover
-    main()  # pylint: disable=no-value-for-parameter
+    main()

@@ -1,7 +1,7 @@
 """Maps activities to locations based on pattern matching."""
 
 import re
-from typing import List, Optional, Tuple
+from typing import Optional
 
 GYM_PATTERN = "gym"
 
@@ -11,7 +11,7 @@ class LocationMapper:
 
     def __init__(
         self,
-        mappings: List[Tuple[str, str]],
+        mappings: list[tuple[str, str]],
         gym_location: Optional[str] = None,
         is_default_gym_location: bool = False,
     ) -> None:
@@ -32,7 +32,7 @@ class LocationMapper:
             raise ValueError(
                 f"Gym location defined multiple times:\n{locations_str}\n"
                 f"Please use either --gym-location "
-                f"or define gym in --locations parameter, not both."
+                f"or define gym in --locations parameter, not both.",
             )
 
         self.gym_location = gym_locations[0][1] if gym_locations else gym_location
@@ -54,10 +54,10 @@ class LocationMapper:
         return self.gym_location
 
 
-class ActivityMapper:  # pylint: disable=too-few-public-methods
+class ActivityMapper:
     """Maps activity names based on regex patterns."""
 
-    def __init__(self, activity_mappings: List[Tuple[str, str]]):
+    def __init__(self, activity_mappings: list[tuple[str, str]]):
         """Initialize with list of (pattern, new_name) tuples."""
         self.mappings = [
             (re.compile(pattern, re.IGNORECASE), new_name)

@@ -1,100 +1,72 @@
 exclude: |
     (?x)(
-        tests/|
-        docs/|
-        setup.py|
-        version.py
+      .venv/
     )
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v5.0.0
     hooks:
-      - id: trailing-whitespace
-      - id: end-of-file-fixer
       - id: check-yaml
-        args: ["--unsafe"]
-      - id: check-added-large-files
-        exclude: (site)
-
-  - repo: https://github.com/myint/autoflake
-    rev: v2.3.1
+      - id: end-of-file-fixer
+        exclude_types: [ python ]
+      - id: trailing-whitespace
+        exclude_types: [ python ]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.9.7
     hooks:
-      - id: autoflake
-        name: Cleanup imports
-        args:
-          - --in-place
-          - --remove-all-unused-imports
-          - --expand-star-imports
-          - --ignore-init-module-imports
-
-  - repo: https://github.com/pre-commit/mirrors-isort
-    rev: v5.10.1
-    hooks:
-      - id: isort
-        name: Sorts imports
+      - id: ruff
+        exclude: ^tests/
         args: [
-            # Align isort with black formatting
-            "--multi-line=3",
-            "--trailing-comma",
-            "--force-grid-wrap=0",
-            "--use-parentheses",
-            "--line-width=99",
-          ]
-
-  - repo: https://github.com/psf/black
-    rev: 24.10.0
-    hooks:
-      - id: black
-        name: Fixes formatting
-        language_version: python3
-        args: ["--line-length=99"]
-
-  - repo: https://github.com/PyCQA/flake8
-    rev: 7.1.1
-    hooks:
-      - id: flake8
-        name: Checks pep8 style
-        args:
-          - --max-line-length=99
-          # F405 - init imports * from module
-          # F401 - ignore imports used in init
-          # F403 - import * used in init
-          - --exclude=__init__.py
-          # ignore long comments (E501), as long lines are formatted by black
-          # ignore Whitespace before ':' (E203)
-          # ignore Line break occurred before a binary operator (W503)
-          # ignore module level import not at top of file (E402) to skip tests with uninstalled modules (pytest.importorskip)
-          - --ignore=E501,E203,W503,E402
-
-  - repo: https://github.com/PyCQA/pydocstyle
-    rev: 6.3.0
-    hooks:
-      - id: pydocstyle
-        name: docstrings
-        entry: pydocstyle
-        language: python
-        args:
-          - --ignore=D100,D203,D405,D407,D213,D413
-
+          --fix,
+          --line-length=100,
+          --select=PL,    # All Pylint rules
+          --select=A001,  # Shadowing Python builtins
+          --select=ARG,   # Unused function arguments
+          --select=B,     # Bugbear rules (B002,B006,etc)
+          --select=BLE,   # Blind except
+          --select=C,     # Complexity
+          --select=COM,   # Comma placement
+          --select=E,     # pycodestyle errors
+          --select=F,     # Pyflakes
+          --select=G,     # Logging format
+          --select=I,     # Import ordering
+          --select=ISC,   # Implicit string concatenation
+          --select=N,     # Naming
+          --select=PIE,   # Misc rules
+          --select=Q,     # Quotes
+          --select=RET,   # Return statement
+          --select=S,     # Security
+          --select=SIM,   # Code simplification
+          --select=SLF,   # Private member access
+          --select=TID,   # Tidy imports
+          --select=TRY,   # Exception handling
+          --select=UP,    # Upgrade syntax
+          --select=W,     # Warnings
+          '--ignore=B019,S101,G004,TRY003,TRY300,TRY301,TRY400'  # Ignore docstring and `assert` detection
+        ]
+      - id: ruff
+        name: ruff-format-tests
+        files: ^tests/
+        args: [
+          --fix,
+          --line-length=99,
+          --exit-zero    # Don't fail on issues
+        ]
+      - id: ruff-format
+        args: [
+          --line-length=100
+        ]
   - repo: local
     hooks:
       - id: mypy
-        name: MyPy
-        entry: |
-          mypy
-          --ignore-missing-imports
-          --install-types
-          --non-interactive
-          --strict
-          --implicit-reexport
-          --warn-unused-ignores
-          --cache-fine-grained
-          --no-namespace-packages
-        files: \.py$
-        language: python
-
-      - id: pylint
-        name: Pylint
-        entry: pylint --max-line-length=99 --ignore-imports=yes
-        files: \.py$
-        language: python
+        name: mypy
+        entry: mypy
+        args: [
+          "--install-types",
+          "--non-interactive",
+          "--ignore-missing-imports",
+          "--namespace-packages",
+          "--explicit-package-bases"
+        ]
+        language: system
+        types: [ python ]
