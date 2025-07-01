@@ -112,7 +112,7 @@ GYM_LOCATION_DEFAULT = "No Limit Gym"
     help="Show version.",
     nargs=1,
 )
-def main(  # noqa: C901,PLR0913,PLR0912
+def main(  # noqa: C901,PLR0913,PLR0912,PLR0915
     sheet: str,
     gym_weekdays: tuple[str, ...],
     gym_duration: int,
@@ -181,9 +181,18 @@ def main(  # noqa: C901,PLR0913,PLR0912
             f"on {filtered_gym_weekdays}",
         )
 
-    fitness, columns = open_google_sheet(sheet)
-
-    start_date, days_to_add = detect_days_to_add(fitness, columns)
+    try:
+        fitness, columns = open_google_sheet(sheet)
+        start_date, days_to_add = detect_days_to_add(fitness, columns)
+    except ValueError as exc:
+        print(f"\nError reading Google Sheet '{sheet}':")
+        print(f"{exc}")
+        print("\nPlease check that your spreadsheet has the required column headers.")
+        print(
+            "Expected headers include: date, distance, steps, location, sport, "
+            "duration, comment, etc.",
+        )
+        sys.exit(1)
     if days_to_add > DAY_TO_ADD_WITHOUT_FORCE and not force:
         print(f"\nToo many days to add ({days_to_add}).\nUse --force to confirm.")
         sys.exit(1)

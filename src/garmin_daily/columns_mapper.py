@@ -81,10 +81,26 @@ class ColumnsMapper:
         """
         return [fields.get(column, "") if column is not None else "" for column in self.row_columns]
 
+    def _raise_missing_column_error(self, column: Enum) -> None:
+        """Raise a detailed error for missing column."""
+        missing_columns = [col for col in self.columns_type if col not in self.column_refs]
+        expected_headers = [
+            name for name, col in self.columns_map.items() if col in missing_columns
+        ]
+        raise ValueError(
+            f"Required column '{column.name}' not found in spreadsheet header. "
+            f"Missing columns: {[col.name for col in missing_columns]}. "
+            f"Expected header names: {expected_headers}",
+        )
+
     def __getitem__(self, column: Enum) -> str:
         """Spreadsheet reference for the column."""
+        if column not in self.column_refs:
+            self._raise_missing_column_error(column)
         return self.column_refs[column]
 
     def idx(self, column: Enum) -> int:
         """Index (starting from 0) for the column."""
+        if column not in self.column_idxs:
+            self._raise_missing_column_error(column)
         return self.column_idxs[column]
