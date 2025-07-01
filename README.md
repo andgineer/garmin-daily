@@ -4,14 +4,14 @@
 
 | Name                                      |    Stmts |     Miss |   Cover |   Missing |
 |------------------------------------------ | -------: | -------: | ------: | --------: |
-| src/garmin\_daily/columns\_mapper.py      |       25 |        1 |     96% |        75 |
+| src/garmin\_daily/columns\_mapper.py      |       33 |        1 |     97% |        75 |
 | src/garmin\_daily/garmin\_aggregations.py |      189 |        2 |     99% |   169-170 |
 | src/garmin\_daily/google\_sheet.py        |      103 |       10 |     90% |59, 106, 153-155, 159-160, 246, 255-256 |
-| src/garmin\_daily/main.py                 |       74 |        4 |     95% |141-143, 203 |
+| src/garmin\_daily/main.py                 |       81 |       10 |     88% |141-143, 187-195, 212 |
 | src/garmin\_daily/mappers.py              |       31 |        0 |    100% |           |
 | src/garmin\_daily/snake\_to\_camel.py     |       10 |        0 |    100% |           |
 | src/garmin\_daily/version.py              |        1 |        0 |    100% |           |
-|                                 **TOTAL** |  **433** |   **17** | **96%** |           |
+|                                 **TOTAL** |  **448** |   **23** | **95%** |           |
 
 
 ## Setup coverage badge
