@@ -152,7 +152,7 @@ def main(  # noqa: C901,PLR0913,PLR0912,PLR0915
             print("Invalid rename format. Use: pattern1=newname1,pattern2=newname2")
             sys.exit(1)
 
-    gym_location_param = ctx.get_parameter_source("gym_location")
+    gym_location_param = ctx.get_parameter_source("gym_location") if ctx else None
     is_default_gym_location = gym_location_param is click_core.ParameterSource.DEFAULT
     try:
         location_mapper = LocationMapper(location_mappings, gym_location, is_default_gym_location)

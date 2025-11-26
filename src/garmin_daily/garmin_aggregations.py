@@ -2,10 +2,11 @@
 
 import os
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import Enum
-from typing import Annotated, Any, Callable, Optional, Union, get_type_hints
+from typing import Annotated, Any, get_type_hints
 
 import urllib3.exceptions
 from garminconnect import Garmin, GarminConnectAuthenticationError
@@ -56,10 +57,10 @@ class AggFunc(Enum):
 class ActivityField:
     """Activity field description."""
 
-    garmin_field: Optional[
-        str
-    ]  # the field name in Garmin Connect, None if not exists in Garmin activity
-    aggregate: Union[AggFunc, Callable[[Any], Any]]  # aggregate function type or function itself
+    garmin_field: (
+        str | None
+    )  # the field name in Garmin Connect, None if not exists in Garmin activity
+    aggregate: AggFunc | Callable[[Any], Any]  # aggregate function type or function itself
 
 
 ACTIVITY_PATH_DELIMITER = "/"
@@ -74,25 +75,25 @@ class Activity:
         ActivityField(f"activityType{ACTIVITY_PATH_DELIMITER}typeKey", AggFunc.FIRST),
     ]
     location_name: Annotated[str, ActivityField("", AggFunc.FIRST)]
-    duration: Annotated[Optional[float], ActivityField("", AggFunc.SUM)]  # float seconds
+    duration: Annotated[float | None, ActivityField("", AggFunc.SUM)]  # float seconds
 
-    average_hr: Annotated[Optional[float], ActivityField("averageHR", AggFunc.AVERAGE)] = None
-    calories: Annotated[Optional[float], ActivityField("", AggFunc.SUM)] = None
-    distance: Annotated[Optional[Union[float, int]], ActivityField("", AggFunc.SUM)] = None
-    elevation_gain: Annotated[Optional[float], ActivityField("", AggFunc.SUM)] = None
-    max_hr: Annotated[Optional[float], ActivityField("maxHR", AggFunc.MAX)] = None
-    max_speed: Annotated[Optional[float], ActivityField("", AggFunc.MAX)] = None  # km/h??
-    average_speed: Annotated[Optional[float], ActivityField("", AggFunc.MAX)] = None
-    start_time: Annotated[Optional[str], ActivityField("startTimeLocal", AggFunc.MIN)] = None
-    steps: Annotated[Optional[int], ActivityField("", AggFunc.SUM)] = None
-    moving_duration: Annotated[Optional[float], ActivityField("", AggFunc.SUM)] = None
+    average_hr: Annotated[float | None, ActivityField("averageHR", AggFunc.AVERAGE)] = None
+    calories: Annotated[float | None, ActivityField("", AggFunc.SUM)] = None
+    distance: Annotated[float | int | None, ActivityField("", AggFunc.SUM)] = None
+    elevation_gain: Annotated[float | None, ActivityField("", AggFunc.SUM)] = None
+    max_hr: Annotated[float | None, ActivityField("maxHR", AggFunc.MAX)] = None
+    max_speed: Annotated[float | None, ActivityField("", AggFunc.MAX)] = None  # km/h??
+    average_speed: Annotated[float | None, ActivityField("", AggFunc.MAX)] = None
+    start_time: Annotated[str | None, ActivityField("startTimeLocal", AggFunc.MIN)] = None
+    steps: Annotated[int | None, ActivityField("", AggFunc.SUM)] = None
+    moving_duration: Annotated[float | None, ActivityField("", AggFunc.SUM)] = None
 
     # in non-Walking activity this is steps calculated in non-walking activities for this day
     # we should subtract them from Walking activity steps to get "real" walking steps
-    non_walking_steps: Annotated[Optional[int], ActivityField(None, AggFunc.SUM)] = None
+    non_walking_steps: Annotated[int | None, ActivityField(None, AggFunc.SUM)] = None
 
-    sport: Annotated[Optional[str], ActivityField(None, AggFunc.FIRST)] = None
-    comment: Annotated[Optional[str], ActivityField(None, AggFunc.FIRST)] = None
+    sport: Annotated[str | None, ActivityField(None, AggFunc.FIRST)] = None
+    comment: Annotated[str | None, ActivityField(None, AggFunc.FIRST)] = None
 
     @classmethod
     def init_from_garmin_activity(cls, garmin_activity: dict[str, Any]) -> "Activity":
@@ -118,7 +119,7 @@ class Activity:
         return Activity(**fields)
 
     @staticmethod
-    def to_km_h(garmin_speed: Optional[float]) -> Optional[float]:
+    def to_km_h(garmin_speed: float | None) -> float | None:
         """Convert m/s to km/h and round to 2 digits after point."""
         return round(garmin_speed * 60 * 60 / 1000, 2) if garmin_speed else None
 
@@ -169,7 +170,7 @@ class GarminDay:
         except Exception:  # noqa: BLE001
             return 0.0
 
-    def get_hr(self) -> tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
+    def get_hr(self) -> tuple[int | None, int | None, int | None, int | None]:
         """Set HR attrs.
 
         Returns (min, max, average, rest)
@@ -187,7 +188,7 @@ class GarminDay:
             hr_average = None
         return hr_min, hr_max, hr_average, hr_rest
 
-    def get_sleep(self) -> tuple[Optional[int], Optional[int], Optional[int], Optional[int]]:
+    def get_sleep(self) -> tuple[int | None, int | None, int | None, int | None]:
         """Set sleep attrs.
 
         Returns (total, deep, light, REM)
@@ -287,7 +288,7 @@ class GarminDay:
         )
 
     @staticmethod
-    def dump_float(val: Optional[float], precision: int = 1) -> str:
+    def dump_float(val: float | None, precision: int = 1) -> str:
         """Round representation if float or empty."""
         if isinstance(val, float):
             val = round(val, precision)
@@ -299,7 +300,7 @@ class GarminDay:
     def dump_attrs(
         obj: Any,
         *attributes_names: str,
-        func: Optional[Callable[[Any], Any]] = None,
+        func: Callable[[Any], Any] | None = None,
         precision: int = 1,
     ) -> str:
         """Dump the obj's attributes as 'name=value'.
@@ -355,7 +356,7 @@ class GarminDay:
         activity_list: list[Activity],
         field_decr: ActivityField,
         field_name: str,
-    ) -> Optional[Union[int, float, str]]:
+    ) -> int | float | str | None:
         """Aggregate field_name according to field_descr."""
         if field_decr.aggregate in [AggFunc.MIN, AggFunc.MAX, AggFunc.SUM]:
             return field_decr.aggregate.value(  # type: ignore

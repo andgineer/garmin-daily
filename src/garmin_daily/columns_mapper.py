@@ -1,7 +1,6 @@
 """Map fields to columns using spreadsheet header row."""
 
 from enum import Enum, IntEnum
-from typing import Optional, Union
 
 
 class GarminCol(IntEnum):
@@ -49,7 +48,7 @@ class ColumnsMapper:
         self,
         header_row: list[str],
         columns_type: type[Enum] = GarminCol,
-        columns_map: Optional[dict[str, Enum]] = None,
+        columns_map: dict[str, Enum] | None = None,
     ) -> None:
         """Init from spreadsheet title."""
         self.columns_map = COLUMNS_MAP if columns_map is None else columns_map
@@ -60,11 +59,11 @@ class ColumnsMapper:
         self.column_idxs = {self.header_to_col(name): idx for idx, name in enumerate(header_row)}
         self.row_columns = self.fill_row_columns(header_row)
 
-    def fill_row_columns(self, header_row: list[str]) -> list[Optional[Enum]]:
+    def fill_row_columns(self, header_row: list[str]) -> list[Enum | None]:
         """Fill list with columns as they listed in the spreadsheet header row."""
         return [self.header_to_col(header) for header in header_row]
 
-    def header_to_col(self, header: str) -> Optional[Enum]:
+    def header_to_col(self, header: str) -> Enum | None:
         """Return column ID for the header.
 
         For unknown columns return None.
@@ -74,7 +73,7 @@ class ColumnsMapper:
             return self.columns_map[header_canonical]
         return None
 
-    def map(self, fields: dict[Enum, str]) -> list[Optional[Union[str, int, float]]]:
+    def map(self, fields: dict[Enum, str]) -> list[str | int | float | None]:
         """Map fields to spreadsheet row.
 
         Unknown columns are filled with empty strings.

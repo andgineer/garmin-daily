@@ -6,22 +6,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Environment Setup
 ```bash
-. ./activate.sh  # Creates/activates venv and installs package in editable mode
+source ./activate.sh  # Creates/activates venv and installs package in editable mode
 ```
+
+**IMPORTANT**: Always activate the virtual environment before running any commands. Use `source ./activate.sh` before each command.
 
 ### Testing
 ```bash
-pytest                    # Run all tests with doctest modules
-pytest tests/test_*.py    # Run specific test file
+source ./activate.sh && pytest                    # Run all tests with doctest modules
+source ./activate.sh && pytest tests/test_*.py    # Run specific test file
 ```
 
 ### Code Quality
 ```bash
-pre-commit run --all-files  # Run all linting and formatting checks
-ruff --fix                  # Run ruff linter with auto-fix
-ruff-format                 # Format code with ruff
-mypy src/                   # Type checking (excludes tests)
+source ./activate.sh && pre-commit run --all-files  # Run all linting and formatting checks
 ```
+
+**IMPORTANT**: Always use `pre-commit run --all-files` for code quality checks. Never run ruff or mypy directly.
 
 ### Build and Release
 ```bash

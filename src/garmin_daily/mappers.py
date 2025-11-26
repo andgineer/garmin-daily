@@ -1,7 +1,6 @@
 """Maps activities to locations based on pattern matching."""
 
 import re
-from typing import Optional
 
 GYM_PATTERN = "gym"
 
@@ -12,7 +11,7 @@ class LocationMapper:
     def __init__(
         self,
         mappings: list[tuple[str, str]],
-        gym_location: Optional[str] = None,
+        gym_location: str | None = None,
         is_default_gym_location: bool = False,
     ) -> None:
         """Initialize with list of (pattern, location) tuples."""
@@ -49,7 +48,7 @@ class LocationMapper:
                 return location
         return default_location
 
-    def get_gym_location(self) -> Optional[str]:
+    def get_gym_location(self) -> str | None:
         """Return configured gym location."""
         return self.gym_location
 

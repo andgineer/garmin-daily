@@ -5,7 +5,6 @@ import sys
 import time
 from datetime import date, datetime, timedelta
 from functools import cache
-from typing import Optional, Union
 
 import gspread
 import pandas as pd
@@ -169,7 +168,7 @@ def create_day_rows(  # noqa: PLR0913
     gym_days: list[int],
     location_mapper: "LocationMapper",
     activity_mapper: "ActivityMapper",
-) -> list[dict[GarminCol, Optional[Union[str, int, float]]]]:
+) -> list[dict[GarminCol, str | int | float | None]]:
     """Sheet rows for the day."""
     gday = daily[day]
     if day.weekday() in gym_days:
@@ -183,7 +182,7 @@ def create_day_rows(  # noqa: PLR0913
             ),
         )
 
-    rows_fields: list[dict[GarminCol, Optional[Union[str, int, float]]]] = []
+    rows_fields: list[dict[GarminCol, str | int | float | None]] = []
     for activity in gday.activities:
         mapped_sport = activity_mapper.get_activity_name(activity.sport)
 
@@ -241,7 +240,7 @@ def create_day_rows(  # noqa: PLR0913
     return rows_fields
 
 
-def localized_csv_raw(row: list[Optional[Union[str, int, float]]]) -> list[str]:
+def localized_csv_raw(row: list[str | int | float | None]) -> list[str]:
     """Convert fields to the Google Sheet locale specific string representation."""
     return [f"{val:n}" if isinstance(val, float) else str(val) for val in row]
 
