@@ -4,14 +4,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
     <title>Coverage for src/garmin_daily/main.py: 88%</title>
     <link rel="icon" sizes="32x32" href="favicon_32_cb_58284776.png">
-    <link rel="stylesheet" href="style_cb_6b508a39.css" type="text/css">
-    <script src="coverage_html_cb_6fb7b396.js" defer></script>
+    <link rel="stylesheet" href="style_cb_8432e98f.css" type="text/css">
+    <script src="coverage_html_cb_bcae5fc4.js" defer></script>
 </head>
 <body class="pyfile">
 <header>
     <div class="content">
         <h1>
-            <span class="text">Coverage for </span><b>src/garmin_daily/main.py</b>:
+            <span class="text">Coverage for </span><b>src&#8201;/&#8201;garmin_daily&#8201;/&#8201;main.py</b>:
             <span class="pc_cov">88%</span>
         </h1>
         <aside id="help_panel_wrapper">
@@ -64,8 +64,8 @@
             <a id="indexLink" class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a id="nextFileLink" class="nav" href="z_b888127520e454f3_mappers_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-09-16 04:22 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.12.0">coverage.py v7.12.0</a>,
+            created at 2025-11-26 09:13 +0000
         </p>
         <aside class="hidden">
             <button type="button" class="button_next_chunk" data-shortcut="j"></button>
@@ -234,7 +234,7 @@
     <p class="run"><span class="n"><a id="t152" href="#t152">152</a></span><span class="t">            <span class="nam">print</span><span class="op">(</span><span class="str">"Invalid rename format. Use: pattern1=newname1,pattern2=newname2"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t153" href="#t153">153</a></span><span class="t">            <span class="nam">sys</span><span class="op">.</span><span class="nam">exit</span><span class="op">(</span><span class="num">1</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
     <p class="pln"><span class="n"><a id="t154" href="#t154">154</a></span><span class="t">&nbsp;</span><span class="r"></span></p>
-    <p class="run"><span class="n"><a id="t155" href="#t155">155</a></span><span class="t">    <span class="nam">gym_location_param</span> <span class="op">=</span> <span class="nam">ctx</span><span class="op">.</span><span class="nam">get_parameter_source</span><span class="op">(</span><span class="str">"gym_location"</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
+    <p class="run"><span class="n"><a id="t155" href="#t155">155</a></span><span class="t">    <span class="nam">gym_location_param</span> <span class="op">=</span> <span class="nam">ctx</span><span class="op">.</span><span class="nam">get_parameter_source</span><span class="op">(</span><span class="str">"gym_location"</span><span class="op">)</span> <span class="key">if</span> <span class="nam">ctx</span> <span class="key">else</span> <span class="key">None</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t156" href="#t156">156</a></span><span class="t">    <span class="nam">is_default_gym_location</span> <span class="op">=</span> <span class="nam">gym_location_param</span> <span class="key">is</span> <span class="nam">click_core</span><span class="op">.</span><span class="nam">ParameterSource</span><span class="op">.</span><span class="nam">DEFAULT</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t157" href="#t157">157</a></span><span class="t">    <span class="key">try</span><span class="op">:</span>&nbsp;</span><span class="r"></span></p>
     <p class="run"><span class="n"><a id="t158" href="#t158">158</a></span><span class="t">        <span class="nam">location_mapper</span> <span class="op">=</span> <span class="nam">LocationMapper</span><span class="op">(</span><span class="nam">location_mappings</span><span class="op">,</span> <span class="nam">gym_location</span><span class="op">,</span> <span class="nam">is_default_gym_location</span><span class="op">)</span>&nbsp;</span><span class="r"></span></p>
@@ -306,8 +306,8 @@
             <a class="nav" href="index.html">&Hat; index</a> &nbsp; &nbsp;
             <a class="nav" href="z_b888127520e454f3_mappers_py.html">&#xbb; next</a>
             &nbsp; &nbsp; &nbsp;
-            <a class="nav" href="https://coverage.readthedocs.io/en/7.10.6">coverage.py v7.10.6</a>,
-            created at 2025-09-16 04:22 +0000
+            <a class="nav" href="https://coverage.readthedocs.io/en/7.12.0">coverage.py v7.12.0</a>,
+            created at 2025-11-26 09:13 +0000
         </p>
     </div>
 </footer>
