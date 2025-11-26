@@ -6,3 +6,5 @@ click
 rich-click
 garminconnect
 pandas
+# to support Python 3.10
+numpy<2.3

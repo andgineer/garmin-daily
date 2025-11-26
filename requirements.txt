@@ -34,8 +34,10 @@ markdownify==1.2.2
     # via -r requirements.in
 mdurl==0.1.2
     # via markdown-it-py
-numpy==2.3.5
-    # via pandas
+numpy==2.2.6
+    # via
+    #   -r requirements.in
+    #   pandas
 oauthlib==3.3.1
     # via requests-oauthlib
 pandas==2.3.3
