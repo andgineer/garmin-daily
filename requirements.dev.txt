@@ -4,25 +4,19 @@ annotated-types==0.7.0
     # via
     #   -r requirements.txt
     #   pydantic
-astroid==4.0.2
-    # via pylint
 babel==2.17.0
     # via mkdocs-material
 backrefs==6.1
     # via mkdocs-material
-beautifulsoup4==4.14.2
+beautifulsoup4==4.14.3
     # via
     #   -r requirements.txt
     #   markdownify
 bracex==2.6
     # via wcmatch
-build==1.3.0
+build==1.4.0
     # via pip-tools
-cachetools==6.2.2
-    # via
-    #   -r requirements.txt
-    #   google-auth
-certifi==2025.11.12
+certifi==2026.1.4
     # via
     #   -r requirements.txt
     #   requests
@@ -41,38 +35,36 @@ click==8.3.1
     #   typer
 colorama==0.4.6
     # via mkdocs-material
-coverage==7.12.0
+coverage==7.13.1
     # via
     #   coveralls
     #   pytest-cov
 coveralls==4.0.2
     # via -r requirements.dev.in
-dill==0.4.0
-    # via pylint
 distlib==0.4.0
     # via virtualenv
 docopt==0.6.2
     # via coveralls
-docutils==0.22.3
+docutils==0.22.4
     # via readme-renderer
-filelock==3.20.0
+filelock==3.20.3
     # via virtualenv
 freezegun==1.5.5
     # via -r requirements.dev.in
-garminconnect==0.2.34
+garminconnect==0.2.38
     # via -r requirements.txt
-garth==0.5.19
+garth==0.5.21
     # via
     #   -r requirements.txt
     #   garminconnect
 ghp-import==2.1.0
     # via mkdocs
-google-auth==2.43.0
+google-auth==2.47.0
     # via
     #   -r requirements.txt
     #   google-auth-oauthlib
     #   gspread
-google-auth-oauthlib==1.2.2
+google-auth-oauthlib==1.2.4
     # via
     #   -r requirements.txt
     #   gspread
@@ -80,7 +72,7 @@ gspread==6.2.1
     # via -r requirements.txt
 id==1.5.0
     # via twine
-identify==2.6.15
+identify==2.6.16
     # via pre-commit
 idna==3.11
     # via
@@ -88,13 +80,11 @@ idna==3.11
     #   requests
 iniconfig==2.3.0
     # via pytest
-isort==7.0.0
-    # via pylint
 jaraco-classes==3.4.0
     # via keyring
-jaraco-context==6.0.1
+jaraco-context==6.1.0
     # via keyring
-jaraco-functools==4.3.0
+jaraco-functools==4.4.0
     # via keyring
 jinja2==3.1.6
     # via
@@ -104,7 +94,7 @@ keyring==25.7.0
     # via twine
 lazydocs==0.4.8
     # via -r requirements.dev.in
-markdown==3.10
+markdown==3.10.1
     # via
     #   mkdocs
     #   mkdocs-material
@@ -119,8 +109,6 @@ markupsafe==3.0.3
     # via
     #   jinja2
     #   mkdocs
-mccabe==0.7.0
-    # via pylint
 mdurl==0.1.2
     # via
     #   -r requirements.txt
@@ -138,7 +126,7 @@ mkdocs-awesome-pages-plugin==2.10.1
     # via -r requirements.dev.in
 mkdocs-get-deps==0.2.0
     # via mkdocs
-mkdocs-material==9.7.0
+mkdocs-material==9.7.1
     # via -r requirements.dev.in
 mkdocs-material-extensions==1.3.1
     # via mkdocs-material
@@ -146,15 +134,11 @@ more-itertools==10.8.0
     # via
     #   jaraco-classes
     #   jaraco-functools
-mypy==1.18.2
-    # via -r requirements.dev.in
-mypy-extensions==1.1.0
-    # via mypy
 natsort==8.4.0
     # via mkdocs-awesome-pages-plugin
 nh3==0.3.2
     # via readme-renderer
-nodeenv==1.9.1
+nodeenv==1.10.0
     # via pre-commit
 numpy==2.2.6
     # via
@@ -164,36 +148,34 @@ oauthlib==3.3.1
     # via
     #   -r requirements.txt
     #   requests-oauthlib
-packaging==25.0
+packaging==26.0
     # via
     #   build
     #   mkdocs
     #   pytest
     #   twine
+    #   wheel
 paginate==0.5.7
     # via mkdocs-material
-pandas==2.3.3
+pandas==3.0.0
     # via -r requirements.txt
-pathspec==0.12.1
-    # via
-    #   mkdocs
-    #   mypy
+pathspec==1.0.3
+    # via mkdocs
 pip==25.3
     # via pip-tools
 pip-tools==7.5.2
     # via -r requirements.dev.in
-platformdirs==4.5.0
+platformdirs==4.5.1
     # via
     #   mkdocs-get-deps
-    #   pylint
     #   virtualenv
 pluggy==1.6.0
     # via
     #   pytest
     #   pytest-cov
-pre-commit==4.5.0
+pre-commit==4.5.1
     # via -r requirements.dev.in
-pyasn1==0.6.1
+pyasn1==0.6.2
     # via
     #   -r requirements.txt
     #   pyasn1-modules
@@ -202,7 +184,7 @@ pyasn1-modules==0.4.2
     # via
     #   -r requirements.txt
     #   google-auth
-pydantic==2.12.4
+pydantic==2.12.5
     # via
     #   -r requirements.txt
     #   garth
@@ -217,9 +199,7 @@ pygments==2.19.2
     #   pytest
     #   readme-renderer
     #   rich
-pylint==4.0.3
-    # via -r requirements.dev.in
-pymdown-extensions==10.17.1
+pymdown-extensions==10.20
     # via
     #   -r requirements.dev.in
     #   mkdocs-material
@@ -227,7 +207,9 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pytest==9.0.1
+pyrefly==0.49.0
+    # via -r requirements.dev.in
+pytest==9.0.2
     # via
     #   -r requirements.dev.in
     #   pytest-asyncio
@@ -241,10 +223,6 @@ python-dateutil==2.9.0.post0
     #   -r requirements.txt
     #   freezegun
     #   ghp-import
-    #   pandas
-pytz==2025.2
-    # via
-    #   -r requirements.txt
     #   pandas
 pyyaml==6.0.3
     # via
@@ -282,13 +260,13 @@ rich==14.2.0
     #   rich-click
     #   twine
     #   typer
-rich-click==1.9.4
+rich-click==1.9.6
     # via -r requirements.txt
 rsa==4.9.1
     # via
     #   -r requirements.txt
     #   google-auth
-setuptools==80.9.0
+setuptools==80.10.1
     # via pip-tools
 shellingham==1.5.4
     # via typer
@@ -297,21 +275,18 @@ six==1.17.0
     #   -r requirements.txt
     #   markdownify
     #   python-dateutil
-soupsieve==2.8
+soupsieve==2.8.3
     # via
     #   -r requirements.txt
     #   beautifulsoup4
-tomlkit==0.13.3
-    # via pylint
 twine==6.2.0
     # via -r requirements.dev.in
-typer==0.20.0
+typer==0.21.1
     # via lazydocs
 typing-extensions==4.15.0
     # via
     #   -r requirements.txt
     #   beautifulsoup4
-    #   mypy
     #   pydantic
     #   pydantic-core
     #   pytest-asyncio
@@ -321,20 +296,16 @@ typing-inspection==0.4.2
     # via
     #   -r requirements.txt
     #   pydantic
-tzdata==2025.2
-    # via
-    #   -r requirements.txt
-    #   pandas
-urllib3==2.5.0
+urllib3==2.6.3
     # via
     #   -r requirements.txt
     #   requests
     #   twine
-virtualenv==20.35.4
+virtualenv==20.36.1
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
 wcmatch==10.1
     # via mkdocs-awesome-pages-plugin
-wheel==0.45.1
+wheel==0.46.3
     # via pip-tools
