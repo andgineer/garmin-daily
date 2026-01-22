@@ -4,7 +4,9 @@ import locale
 import sys
 import time
 from datetime import date, datetime, timedelta
+from enum import Enum
 from functools import cache
+from typing import cast
 
 import gspread
 import pandas as pd
@@ -50,8 +52,8 @@ def add_rows_from_garmin(  # noqa: PLR0913
                 activity_mapper=activity_mapper,
             )
             rows = [
-                localized_csv_raw(columns.map(fields))
-                for fields in rows_fields  # type: ignore
+                localized_csv_raw(columns.map(cast(dict[Enum, str | int | float | None], fields)))
+                for fields in rows_fields
             ]
             search_missed_steps_in_sheet(fitness, rows, columns)
             for row in rows:
@@ -85,7 +87,7 @@ def search_missed_steps_in_sheet(
         steps = fitness_df(fitness)[(fitness_df(fitness).index == day)]["Steps"]
         steps = steps[steps != ""]
         steps = steps[steps > 0].values
-        return steps[0] if steps.size > 0 else 0
+        return steps[0] if len(steps) > 0 else 0
 
     for row in rows:
         no_steps_distance = "=0*"
@@ -207,7 +209,7 @@ def create_day_rows(  # noqa: PLR0913
                             f"-{activity.non_walking_steps if activity.non_walking_steps else 0})"
                             f"*{SPORT_STEP_LENGTH_KM[activity.sport]:.2n}"
                         )
-                        if activity.sport in SPORT_STEP_LENGTH_KM
+                        if activity.sport is not None and activity.sport in SPORT_STEP_LENGTH_KM
                         else ""
                     )
                 ),

@@ -74,8 +74,8 @@ class Activity:
         str,
         ActivityField(f"activityType{ACTIVITY_PATH_DELIMITER}typeKey", AggFunc.FIRST),
     ]
-    location_name: Annotated[str, ActivityField("", AggFunc.FIRST)]
-    duration: Annotated[float | None, ActivityField("", AggFunc.SUM)]  # float seconds
+    location_name: Annotated[str | None, ActivityField("", AggFunc.FIRST)] = None
+    duration: Annotated[float | None, ActivityField("", AggFunc.SUM)] = None  # float seconds
 
     average_hr: Annotated[float | None, ActivityField("averageHR", AggFunc.AVERAGE)] = None
     calories: Annotated[float | None, ActivityField("", AggFunc.SUM)] = None
@@ -98,7 +98,7 @@ class Activity:
     @classmethod
     def init_from_garmin_activity(cls, garmin_activity: dict[str, Any]) -> "Activity":
         """Create Activity object from Garmin Connect activity fields."""
-        fields = {}
+        fields: dict[str, Any] = {}
         descr: dict[str, ActivityField] = {
             field: get_type_hints(Activity, include_extras=True)[field].__metadata__[0]
             for field in get_type_hints(Activity, include_extras=True)
@@ -116,6 +116,9 @@ class Activity:
             else:
                 val = garmin_activity.get(field_path) if field_path else None
             fields[field_name] = val
+        # Ensure required string fields are not None
+        if fields.get("activity_type") is None:
+            fields["activity_type"] = ""
         return Activity(**fields)
 
     @staticmethod
@@ -130,7 +133,11 @@ class Activity:
         Actually it erroneously calculate steps during such activities like roller skiing.
         We have to estimate this steps to subtract them from Walking activity steps.
         """
-        if self.sport in SPORT_STEP_LENGTH_KM and isinstance(self.distance, (float, int)):
+        if (
+            self.sport is not None
+            and self.sport in SPORT_STEP_LENGTH_KM
+            and isinstance(self.distance, (float, int))
+        ):
             return int(self.distance / 1000 // SPORT_STEP_LENGTH_KM[self.sport])
         return 0
 
@@ -183,7 +190,7 @@ class GarminDay:
             # hr[0] Unix time in ms, datetime.utcfromtimestamp(hr[0] / 1000)
             hr_sum = sum(hr[1] for hr in hr_data["heartRateValues"] if hr[1])
             hr_count = sum(1 for hr in hr_data["heartRateValues"] if hr[1])
-            hr_average = hr_sum / hr_count if hr_count else None
+            hr_average = int(hr_sum / hr_count) if hr_count else None
         else:
             hr_average = None
         return hr_min, hr_max, hr_average, hr_rest
@@ -290,10 +297,11 @@ class GarminDay:
     @staticmethod
     def dump_float(val: float | None, precision: int = 1) -> str:
         """Round representation if float or empty."""
+        if val is None:
+            return ""
         if isinstance(val, float):
-            val = round(val, precision)
-            if precision == 0:
-                val = int(val)
+            rounded_val: float = round(val, precision)
+            val = int(rounded_val) if precision == 0 else rounded_val
         return f"{val}" if val else ""
 
     @staticmethod
@@ -318,7 +326,7 @@ class GarminDay:
                 val = getattr(obj, attr_name)
                 if func is not None:
                     val = func(val)
-                result.append(f"{dump_name}={GarminDay.dump_float(val, precision=precision)}")
+                result.append(f"{dump_name}={GarminDay.dump_float(val, precision=precision)}")  # type: ignore[bad-argument-type]
         return " ".join(result)
 
     @staticmethod

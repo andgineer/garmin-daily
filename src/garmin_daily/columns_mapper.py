@@ -73,7 +73,7 @@ class ColumnsMapper:
             return self.columns_map[header_canonical]
         return None
 
-    def map(self, fields: dict[Enum, str]) -> list[str | int | float | None]:
+    def map(self, fields: dict[Enum, str | int | float | None]) -> list[str | int | float | None]:
         """Map fields to spreadsheet row.
 
         Unknown columns are filled with empty strings.
