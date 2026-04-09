@@ -9,8 +9,8 @@ from enum import Enum
 from typing import Annotated, Any, get_type_hints
 
 import urllib3.exceptions
+from curl_cffi.requests.session import RetryStrategy
 from garminconnect import Garmin, GarminConnectAuthenticationError
-from requests.adapters import HTTPAdapter, Retry
 
 from garmin_daily.snake_to_camel import capitalize_words, snake_to_camel
 
@@ -340,7 +340,7 @@ class GarminDay:
             field_name: GarminDay.aggregate_field(activity_list, field_decr, field_name)
             for field_name, field_decr in descr.items()
         }
-        fields["sport"] = activity_name.split(SPORT_UNIQUENESS)[
+        fields["sport"] = activity_name.split(SPORT_UNIQUENESS, maxsplit=1)[
             0
         ]  # just sport name without start time
         activity = Activity(**fields)  # type: ignore
@@ -393,14 +393,10 @@ class GarminDaily:
         email = os.getenv("GARMIN_EMAIL")
         password = os.getenv("GARMIN_PASSWORD")
         self.api = Garmin(email, password)
-        retries = Retry(
-            total=5,
-            backoff_factor=3,  # retry in [0, 6, 12, 24, 48] seconds
-            status_forcelist=[403],
-        )
-        self.api.garth.sess.mount(
-            "https://",
-            HTTPAdapter(max_retries=retries),
+        self.api.client.cs.retry = RetryStrategy(
+            count=5,
+            delay=3,
+            backoff="exponential",
         )
 
     def login(self) -> None:  # pragma: no cover

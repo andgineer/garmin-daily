@@ -232,4 +232,4 @@ def test_garmin_day_init():
     ):
         garmin_day = GarminDaily()
         garmin_mock.assert_called_with("fake-email", "fake-password")
-        garmin_day.api.garth.sess.mount.assert_called()
+        assert garmin_day.api.client.cs.retry is not None
