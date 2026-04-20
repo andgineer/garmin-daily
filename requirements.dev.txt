@@ -12,7 +12,7 @@ beautifulsoup4==4.14.3
     #   markdownify
 bracex==2.6
     # via wcmatch
-build==1.4.2
+build==1.4.3
     # via pip-tools
 certifi==2026.2.25
     # via
@@ -57,17 +57,17 @@ distlib==0.4.0
     # via virtualenv
 docutils==0.22.4
     # via readme-renderer
-filelock==3.25.2
+filelock==3.29.0
     # via
     #   python-discovery
     #   virtualenv
 freezegun==1.5.5
     # via -r requirements.dev.in
-garminconnect==0.3.1
+garminconnect==0.3.2
     # via -r requirements.txt
 ghp-import==2.1.0
     # via mkdocs
-google-auth==2.49.1
+google-auth==2.49.2
     # via
     #   -r requirements.txt
     #   google-auth-oauthlib
@@ -80,7 +80,7 @@ gspread==6.2.1
     # via -r requirements.txt
 id==1.6.1
     # via twine
-identify==2.6.18
+identify==2.6.19
     # via pre-commit
 idna==3.11
     # via
@@ -138,7 +138,7 @@ mkdocs-material==9.7.6
     # via -r requirements.dev.in
 mkdocs-material-extensions==1.3.1
     # via mkdocs-material
-more-itertools==11.0.1
+more-itertools==11.0.2
     # via
     #   jaraco-classes
     #   jaraco-functools
@@ -156,7 +156,7 @@ oauthlib==3.3.1
     # via
     #   -r requirements.txt
     #   requests-oauthlib
-packaging==26.0
+packaging==26.1
     # via
     #   build
     #   mkdocs
@@ -211,7 +211,7 @@ pyproject-hooks==1.2.0
     # via
     #   build
     #   pip-tools
-pyrefly==0.60.0
+pyrefly==0.61.1
     # via -r requirements.dev.in
 pytest==9.0.3
     # via
@@ -258,7 +258,7 @@ requests-toolbelt==1.0.0
     # via twine
 rfc3986==2.0.0
     # via twine
-rich==14.3.3
+rich==15.0.0
     # via
     #   -r requirements.txt
     #   curl-cffi
@@ -291,7 +291,7 @@ typing-extensions==4.15.0
     #   -r requirements.txt
     #   beautifulsoup4
     #   pytest-asyncio
-ua-generator==2.0.24
+ua-generator==2.0.25
     # via
     #   -r requirements.txt
     #   garminconnect
@@ -301,7 +301,7 @@ urllib3==2.6.3
     #   id
     #   requests
     #   twine
-virtualenv==21.2.0
+virtualenv==21.2.4
     # via pre-commit
 watchdog==6.0.0
     # via mkdocs
